@@ -1,0 +1,28 @@
+2025-10-29 20:02:07.184 | INFO     | mind_evolve.core.evolutionary_engine:solve:58 | Starting Mind Evolution for problem: Creative Writing Task
+2025-10-29 20:02:07.184 | INFO     | mind_evolve.core.evolutionary_engine:solve:59 | Configuration: 5 generations, 2 islands, 3 conversations
+2025-10-29 20:02:07.184 | INFO     | mind_evolve.core.evolutionary_engine:solve:64 | Initializing populations...
+2025-10-29 20:02:07.184 | INFO     | mind_evolve.core.island_model:initialize_populations:63 | Initializing 2 island populations
+2025-10-29 20:02:07.185 | INFO     | mind_evolve.operators.initialization:initialize_population:49 | Initializing population for island 0
+2025-10-29 20:02:07.189 | ERROR    | mind_evolve.core.evolutionary_engine:solve:80 | Evolution failed: This event loop is already running
+2025-10-29 20:04:41.559 | INFO     | mind_evolve.core.evolutionary_engine:solve:58 | Starting Mind Evolution for problem: Creative Writing Task
+2025-10-29 20:04:41.559 | INFO     | mind_evolve.core.evolutionary_engine:solve:59 | Configuration: 5 generations, 2 islands, 3 conversations
+2025-10-29 20:04:41.560 | INFO     | mind_evolve.core.evolutionary_engine:solve:64 | Initializing populations...
+2025-10-29 20:04:41.560 | INFO     | mind_evolve.core.island_model:initialize_populations:63 | Initializing 2 island populations
+2025-10-29 20:04:41.560 | INFO     | mind_evolve.operators.initialization:initialize_population:49 | Initializing population for island 0
+2025-10-29 20:06:26.978 | INFO     | mind_evolve.operators.initialization:initialize_population:91 | Generated 9 solutions for island 0
+2025-10-29 20:06:26.980 | INFO     | mind_evolve.operators.initialization:initialize_population:49 | Initializing population for island 1
+2025-10-29 20:08:10.456 | INFO     | mind_evolve.operators.initialization:initialize_population:91 | Generated 9 solutions for island 1
+2025-10-29 20:08:10.457 | INFO     | mind_evolve.core.island_model:initialize_populations:82 | Initialized populations with 18 solutions
+2025-10-29 20:08:10.458 | INFO     | mind_evolve.core.evolutionary_engine:_run_generation:118 | 🧬 Starting Generation 0
+2025-10-29 20:11:14.776 | INFO     | mind_evolve.operators.migration:ring_migration:123 | Completed ring migration across 2 islands
+2025-10-29 20:11:16.123 | INFO     | mind_evolve.core.population:clear:111 | Clearing population on island 0
+2025-10-29 20:11:16.125 | INFO     | mind_evolve.core.population:clear:111 | Clearing population on island 1
+2025-10-29 20:11:16.126 | INFO     | mind_evolve.core.island_model:perform_island_reset:262 | Reset islands [0, 1] with 5 elites
+2025-10-29 20:11:16.127 | INFO     | mind_evolve.core.evolutionary_engine:_log_generation_summary:173 | ✅ Generation 0 completed in 185.67s
+2025-10-29 20:11:16.127 | INFO     | mind_evolve.core.evolutionary_engine:_log_generation_summary:174 |    Best score: 10.000
+2025-10-29 20:11:16.127 | INFO     | mind_evolve.core.evolutionary_engine:_log_generation_summary:175 |    Avg score: 6.667
+2025-10-29 20:11:16.127 | INFO     | mind_evolve.core.evolutionary_engine:_log_generation_summary:176 |    Total improvement: +0.000
+2025-10-29 20:11:16.127 | INFO     | mind_evolve.core.evolutionary_engine:solve:73 | Valid solution found at generation 0. Early stopping enabled.
+2025-10-29 20:11:16.127 | INFO     | mind_evolve.core.evolutionary_engine:solve:97 | Evolution completed. Best solution score: 10.000
+2025-10-29 20:11:16.127 | INFO     | mind_evolve.core.evolutionary_engine:solve:102 | Experiment metrics: {'runtime_minutes': 6.5761355519294735, 'generations_completed': 1, 'solutions_per_minute': 1.5206499198554304, 'success_rate': 100.0, 'best_score': 10.0, 'avg_generation_time': 185.66953253746033, 'total_llm_calls': 0, 'avg_llm_response_time': 0.0}
+2025-10-29 20:11:16.147 | INFO     | mind_evolve.core.evolutionary_engine:export_results:287 | Results exported to results\simple_example_results.json

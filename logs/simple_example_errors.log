@@ -1,0 +1,1 @@
+2025-10-29 20:02:07.189 | ERROR    | mind_evolve.core.evolutionary_engine:solve:80 | Evolution failed: This event loop is already running

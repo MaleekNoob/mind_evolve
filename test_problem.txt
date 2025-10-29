@@ -1,0 +1,10 @@
+Creative Writing Challenge
+
+Write a short story about a robot learning to feel emotions.
+
+Constraints:
+- Must be 200-300 words long
+- Must feature a robot as the main character  
+- Must explore the theme of emotions or consciousness
+- Should have a clear beginning, middle, and end
+- Use vivid, engaging language
