@@ -20,7 +20,7 @@ class BaseLLM(ABC):
 
     def __init__(self, model_name: str, **kwargs: Any) -> None:
         """Initialize LLM interface.
-        
+
         Args:
             model_name: Name of the model to use
             **kwargs: Additional configuration parameters
@@ -29,37 +29,41 @@ class BaseLLM(ABC):
         self.config = kwargs
 
     @abstractmethod
-    async def generate_async(self,
-                           prompt: str,
-                           temperature: float = 1.0,
-                           max_tokens: int | None = None,
-                           **kwargs: Any) -> LLMResponse:
+    async def generate_async(
+        self,
+        prompt: str,
+        temperature: float = 1.0,
+        max_tokens: int | None = None,
+        **kwargs: Any,
+    ) -> LLMResponse:
         """Generate response asynchronously.
-        
+
         Args:
             prompt: Input prompt
             temperature: Sampling temperature
             max_tokens: Maximum tokens to generate
             **kwargs: Additional generation parameters
-            
+
         Returns:
             LLMResponse with generated content
         """
         pass
 
-    def generate(self,
-                prompt: str,
-                temperature: float = 1.0,
-                max_tokens: int | None = None,
-                **kwargs: Any) -> str:
+    def generate(
+        self,
+        prompt: str,
+        temperature: float = 1.0,
+        max_tokens: int | None = None,
+        **kwargs: Any,
+    ) -> str:
         """Generate response synchronously.
-        
+
         Args:
             prompt: Input prompt
-            temperature: Sampling temperature 
+            temperature: Sampling temperature
             max_tokens: Maximum tokens to generate
             **kwargs: Additional generation parameters
-            
+
         Returns:
             Generated text content
         """
@@ -70,8 +74,11 @@ class BaseLLM(ABC):
             loop = asyncio.get_running_loop()
             # If we're in an async context, run in thread pool
             import concurrent.futures
+
             with concurrent.futures.ThreadPoolExecutor() as executor:
-                future = executor.submit(self._sync_generate, prompt, temperature, max_tokens, **kwargs)
+                future = executor.submit(
+                    self._sync_generate, prompt, temperature, max_tokens, **kwargs
+                )
                 response = future.result()
         except RuntimeError:
             # No event loop running, create one
@@ -86,10 +93,16 @@ class BaseLLM(ABC):
 
         return response.content
 
-    def _sync_generate(self, prompt: str, temperature: float = 1.0,
-                      max_tokens: int | None = None, **kwargs: Any) -> Any:
+    def _sync_generate(
+        self,
+        prompt: str,
+        temperature: float = 1.0,
+        max_tokens: int | None = None,
+        **kwargs: Any,
+    ) -> Any:
         """Helper method to run async generation in a new event loop."""
         import asyncio
+
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:
@@ -102,7 +115,7 @@ class BaseLLM(ABC):
     @abstractmethod
     def get_model_info(self) -> dict[str, Any]:
         """Get information about the model.
-        
+
         Returns:
             Dictionary with model information
         """
@@ -112,9 +125,11 @@ class BaseLLM(ABC):
 class OpenAILLM(BaseLLM):
     """OpenAI GPT interface."""
 
-    def __init__(self, model_name: str = "gpt-4", api_key: str | None = None, **kwargs: Any) -> None:
+    def __init__(
+        self, model_name: str = "gpt-4", api_key: str | None = None, **kwargs: Any
+    ) -> None:
         """Initialize OpenAI LLM.
-        
+
         Args:
             model_name: OpenAI model name
             api_key: API key (if None, uses environment variable)
@@ -124,15 +139,18 @@ class OpenAILLM(BaseLLM):
 
         try:
             import openai
+
             self.client = openai.AsyncOpenAI(api_key=api_key)
         except ImportError:
             raise ImportError("openai package required for OpenAI LLM")
 
-    async def generate_async(self,
-                           prompt: str,
-                           temperature: float = 1.0,
-                           max_tokens: int | None = None,
-                           **kwargs: Any) -> LLMResponse:
+    async def generate_async(
+        self,
+        prompt: str,
+        temperature: float = 1.0,
+        max_tokens: int | None = None,
+        **kwargs: Any,
+    ) -> LLMResponse:
         """Generate response using OpenAI API."""
         try:
             response = await self.client.chat.completions.create(
@@ -140,7 +158,7 @@ class OpenAILLM(BaseLLM):
                 messages=[{"role": "user", "content": prompt}],
                 temperature=temperature,
                 max_tokens=max_tokens,
-                **kwargs
+                **kwargs,
             )
 
             choice = response.choices[0]
@@ -148,7 +166,7 @@ class OpenAILLM(BaseLLM):
                 content=choice.message.content or "",
                 finish_reason=choice.finish_reason,
                 usage=response.usage.model_dump() if response.usage else {},
-                metadata={"model": self.model_name}
+                metadata={"model": self.model_name},
             )
 
         except Exception as e:
@@ -166,9 +184,14 @@ class OpenAILLM(BaseLLM):
 class AnthropicLLM(BaseLLM):
     """Anthropic Claude interface."""
 
-    def __init__(self, model_name: str = "claude-3-sonnet-20240229", api_key: str | None = None, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        model_name: str = "claude-3-sonnet-20240229",
+        api_key: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Initialize Anthropic LLM.
-        
+
         Args:
             model_name: Anthropic model name
             api_key: API key (if None, uses environment variable)
@@ -178,15 +201,18 @@ class AnthropicLLM(BaseLLM):
 
         try:
             import anthropic
+
             self.client = anthropic.AsyncAnthropic(api_key=api_key)
         except ImportError:
             raise ImportError("anthropic package required for Anthropic LLM")
 
-    async def generate_async(self,
-                           prompt: str,
-                           temperature: float = 1.0,
-                           max_tokens: int | None = None,
-                           **kwargs: Any) -> LLMResponse:
+    async def generate_async(
+        self,
+        prompt: str,
+        temperature: float = 1.0,
+        max_tokens: int | None = None,
+        **kwargs: Any,
+    ) -> LLMResponse:
         """Generate response using Anthropic API."""
         try:
             # Default max_tokens for Claude
@@ -198,7 +224,7 @@ class AnthropicLLM(BaseLLM):
                 max_tokens=max_tokens,
                 temperature=temperature,
                 messages=[{"role": "user", "content": prompt}],
-                **kwargs
+                **kwargs,
             )
 
             content = ""
@@ -208,9 +234,13 @@ class AnthropicLLM(BaseLLM):
             return LLMResponse(
                 content=content,
                 finish_reason=response.stop_reason,
-                usage={"input_tokens": response.usage.input_tokens,
-                      "output_tokens": response.usage.output_tokens} if response.usage else {},
-                metadata={"model": self.model_name}
+                usage={
+                    "input_tokens": response.usage.input_tokens,
+                    "output_tokens": response.usage.output_tokens,
+                }
+                if response.usage
+                else {},
+                metadata={"model": self.model_name},
             )
 
         except Exception as e:
@@ -228,9 +258,14 @@ class AnthropicLLM(BaseLLM):
 class GoogleLLM(BaseLLM):
     """Google Gemini interface."""
 
-    def __init__(self, model_name: str = "gemini-1.5-flash-001", api_key: str | None = None, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        model_name: str = "gemini-1.5-flash-001",
+        api_key: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Initialize Google LLM.
-        
+
         Args:
             model_name: Google model name
             api_key: API key (if None, uses environment variable)
@@ -240,17 +275,20 @@ class GoogleLLM(BaseLLM):
 
         try:
             import google.generativeai as genai
+
             if api_key:
                 genai.configure(api_key=api_key)
             self.model = genai.GenerativeModel(model_name)
         except ImportError:
             raise ImportError("google-generativeai package required for Google LLM")
 
-    async def generate_async(self,
-                           prompt: str,
-                           temperature: float = 1.0,
-                           max_tokens: int | None = None,
-                           **kwargs: Any) -> LLMResponse:
+    async def generate_async(
+        self,
+        prompt: str,
+        temperature: float = 1.0,
+        max_tokens: int | None = None,
+        **kwargs: Any,
+    ) -> LLMResponse:
         """Generate response using Google Gemini API."""
         try:
             # Configure generation parameters
@@ -261,17 +299,23 @@ class GoogleLLM(BaseLLM):
                 generation_config["max_output_tokens"] = max_tokens
 
             response = await self.model.generate_content_async(
-                prompt,
-                generation_config=generation_config,
-                **kwargs
+                prompt, generation_config=generation_config, **kwargs
             )
 
             return LLMResponse(
                 content=response.text or "",
-                finish_reason=str(response.candidates[0].finish_reason) if response.candidates else None,
-                usage={"input_tokens": response.usage_metadata.prompt_token_count if response.usage_metadata else 0,
-                      "output_tokens": response.usage_metadata.candidates_token_count if response.usage_metadata else 0},
-                metadata={"model": self.model_name}
+                finish_reason=str(response.candidates[0].finish_reason)
+                if response.candidates
+                else None,
+                usage={
+                    "input_tokens": response.usage_metadata.prompt_token_count
+                    if response.usage_metadata
+                    else 0,
+                    "output_tokens": response.usage_metadata.candidates_token_count
+                    if response.usage_metadata
+                    else 0,
+                },
+                metadata={"model": self.model_name},
             )
 
         except Exception as e:
@@ -286,15 +330,17 @@ class GoogleLLM(BaseLLM):
         }
 
 
-def create_llm(provider: str, model_name: str, api_key: str | None = None, **kwargs: Any) -> BaseLLM:
+def create_llm(
+    provider: str, model_name: str, api_key: str | None = None, **kwargs: Any
+) -> BaseLLM:
     """Factory function to create LLM instances.
-    
+
     Args:
         provider: LLM provider (openai, anthropic, google)
         model_name: Model name
         api_key: API key
         **kwargs: Additional configuration
-        
+
     Returns:
         Initialized LLM instance
     """

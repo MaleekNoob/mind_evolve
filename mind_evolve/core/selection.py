@@ -11,17 +11,16 @@ from ..core.models import Solution
 class SelectionStrategy:
     """Base class for selection strategies."""
 
-    def select_parents(self,
-                      selection_pool: list[Solution],
-                      num_parents: int,
-                      config: dict) -> list[Solution]:
+    def select_parents(
+        self, selection_pool: list[Solution], num_parents: int, config: dict
+    ) -> list[Solution]:
         """Select parents from the population.
-        
+
         Args:
             selection_pool: Available solutions for selection
             num_parents: Number of parents to select
             config: Configuration parameters
-            
+
         Returns:
             List of selected parent solutions
         """
@@ -31,17 +30,16 @@ class SelectionStrategy:
 class BoltzmannTournamentSelection(SelectionStrategy):
     """Boltzmann tournament selection with softmax probabilities."""
 
-    def select_parents(self,
-                      selection_pool: list[Solution],
-                      num_parents: int,
-                      config: dict) -> list[Solution]:
+    def select_parents(
+        self, selection_pool: list[Solution], num_parents: int, config: dict
+    ) -> list[Solution]:
         """Select parents using Boltzmann tournament selection.
-        
+
         Args:
             selection_pool: Available solutions for selection
             num_parents: Number of parents to select (0 to N_parent)
             config: Configuration with Pr_no_parents, temperature, etc.
-            
+
         Returns:
             List of selected parent solutions (may be empty)
         """
@@ -50,7 +48,7 @@ class BoltzmannTournamentSelection(SelectionStrategy):
             return []
 
         # Decide if we use parents at all
-        if random.random() < config.get('Pr_no_parents', 1/6):
+        if random.random() < config.get("Pr_no_parents", 1 / 6):
             return []  # Pure mutation - no parents
 
         # Limit number of parents to available solutions
@@ -68,7 +66,7 @@ class BoltzmannTournamentSelection(SelectionStrategy):
             return [selection_pool[i] for i in selected_indices]
 
         # Apply temperature scaling
-        temperature = config.get('temperature', 1.0)
+        temperature = config.get("temperature", 1.0)
         if temperature == 0:
             # Greedy selection - always pick best
             sorted_indices = np.argsort(scores)[::-1]
@@ -81,15 +79,14 @@ class BoltzmannTournamentSelection(SelectionStrategy):
         # Sample without replacement
         try:
             selected_indices = np.random.choice(
-                len(selection_pool),
-                size=num_parents,
-                replace=False,
-                p=probabilities
+                len(selection_pool), size=num_parents, replace=False, p=probabilities
             )
             parents = [selection_pool[i] for i in selected_indices]
 
-            logger.debug(f"Selected {len(parents)} parents with scores: "
-                        f"{[p.score for p in parents]}")
+            logger.debug(
+                f"Selected {len(parents)} parents with scores: "
+                f"{[p.score for p in parents]}"
+            )
             return parents
 
         except ValueError as e:
@@ -104,23 +101,22 @@ class TournamentSelection(SelectionStrategy):
 
     def __init__(self, tournament_size: int = 3):
         """Initialize tournament selection.
-        
+
         Args:
             tournament_size: Number of candidates per tournament
         """
         self.tournament_size = tournament_size
 
-    def select_parents(self,
-                      selection_pool: list[Solution],
-                      num_parents: int,
-                      config: dict) -> list[Solution]:
+    def select_parents(
+        self, selection_pool: list[Solution], num_parents: int, config: dict
+    ) -> list[Solution]:
         """Select parents using tournament selection.
-        
+
         Args:
             selection_pool: Available solutions for selection
             num_parents: Number of parents to select
             config: Configuration parameters
-            
+
         Returns:
             List of selected parent solutions
         """
@@ -128,7 +124,7 @@ class TournamentSelection(SelectionStrategy):
             return []
 
         # Decide if we use parents at all
-        if random.random() < config.get('Pr_no_parents', 1/6):
+        if random.random() < config.get("Pr_no_parents", 1 / 6):
             return []
 
         num_parents = min(num_parents, len(selection_pool))
@@ -149,17 +145,16 @@ class TournamentSelection(SelectionStrategy):
 class RouletteWheelSelection(SelectionStrategy):
     """Fitness-proportionate selection (roulette wheel)."""
 
-    def select_parents(self,
-                      selection_pool: list[Solution],
-                      num_parents: int,
-                      config: dict) -> list[Solution]:
+    def select_parents(
+        self, selection_pool: list[Solution], num_parents: int, config: dict
+    ) -> list[Solution]:
         """Select parents using roulette wheel selection.
-        
+
         Args:
             selection_pool: Available solutions for selection
             num_parents: Number of parents to select
             config: Configuration parameters
-            
+
         Returns:
             List of selected parent solutions
         """
@@ -167,7 +162,7 @@ class RouletteWheelSelection(SelectionStrategy):
             return []
 
         # Decide if we use parents at all
-        if random.random() < config.get('Pr_no_parents', 1/6):
+        if random.random() < config.get("Pr_no_parents", 1 / 6):
             return []
 
         num_parents = min(num_parents, len(selection_pool))
@@ -190,10 +185,7 @@ class RouletteWheelSelection(SelectionStrategy):
 
         # Sample with replacement
         selected_indices = np.random.choice(
-            len(selection_pool),
-            size=num_parents,
-            replace=True,
-            p=probabilities
+            len(selection_pool), size=num_parents, replace=True, p=probabilities
         )
 
         return [selection_pool[i] for i in selected_indices]
@@ -201,18 +193,18 @@ class RouletteWheelSelection(SelectionStrategy):
 
 def create_selection_strategy(strategy_name: str, **kwargs) -> SelectionStrategy:
     """Factory function to create selection strategies.
-    
+
     Args:
         strategy_name: Name of the strategy
         **kwargs: Strategy-specific parameters
-        
+
     Returns:
         Initialized selection strategy
     """
     strategies = {
-        'boltzmann': BoltzmannTournamentSelection,
-        'tournament': TournamentSelection,
-        'roulette': RouletteWheelSelection,
+        "boltzmann": BoltzmannTournamentSelection,
+        "tournament": TournamentSelection,
+        "roulette": RouletteWheelSelection,
     }
 
     if strategy_name not in strategies:

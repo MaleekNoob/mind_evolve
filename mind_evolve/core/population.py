@@ -1,6 +1,5 @@
 """Population management for Mind Evolution."""
 
-
 import numpy as np
 from loguru import logger
 
@@ -12,7 +11,7 @@ class Population:
 
     def __init__(self, island_id: int, max_size: int | None = None) -> None:
         """Initialize population.
-        
+
         Args:
             island_id: Unique identifier for this island
             max_size: Maximum population size (None for unlimited)
@@ -25,7 +24,7 @@ class Population:
 
     def add_solution(self, solution: Solution) -> None:
         """Add solution to population, checking for duplicates.
-        
+
         Args:
             solution: Solution to add
         """
@@ -46,10 +45,10 @@ class Population:
 
     def _is_duplicate(self, solution: Solution) -> bool:
         """Check if solution content already exists in population.
-        
+
         Args:
             solution: Solution to check
-            
+
         Returns:
             True if duplicate exists
         """
@@ -61,29 +60,32 @@ class Population:
 
     def _update_best(self, solution: Solution) -> None:
         """Update best solution if this one is better.
-        
+
         Args:
             solution: Candidate best solution
         """
         if self.best_solution is None or solution.score > self.best_solution.score:
             self.best_solution = solution
-            logger.debug(f"New best solution on island {self.island_id}: "
-                        f"score={solution.score:.3f}")
+            logger.debug(
+                f"New best solution on island {self.island_id}: "
+                f"score={solution.score:.3f}"
+            )
 
     def _remove_worst(self) -> None:
         """Remove worst solution to maintain size limit."""
         if not self.solutions:
             return
 
-        worst_id = min(self.solutions.keys(),
-                      key=lambda k: self.solutions[k].score)
+        worst_id = min(self.solutions.keys(), key=lambda k: self.solutions[k].score)
         removed = self.solutions.pop(worst_id)
-        logger.debug(f"Removed worst solution {worst_id[:8]} "
-                    f"(score={removed.score:.3f}) from island {self.island_id}")
+        logger.debug(
+            f"Removed worst solution {worst_id[:8]} "
+            f"(score={removed.score:.3f}) from island {self.island_id}"
+        )
 
     def get_selection_pool(self) -> list[Solution]:
         """Return all solutions available for selection.
-        
+
         Returns:
             List of all solutions in population
         """
@@ -91,17 +93,15 @@ class Population:
 
     def get_top_solutions(self, n: int) -> list[Solution]:
         """Get top N solutions by score.
-        
+
         Args:
             n: Number of solutions to return
-            
+
         Returns:
             List of top N solutions
         """
         sorted_solutions = sorted(
-            self.solutions.values(),
-            key=lambda s: s.score,
-            reverse=True
+            self.solutions.values(), key=lambda s: s.score, reverse=True
         )
         return sorted_solutions[:n]
 
@@ -113,7 +113,7 @@ class Population:
 
     def calculate_statistics(self) -> PopulationStats:
         """Calculate population statistics.
-        
+
         Returns:
             PopulationStats object with computed metrics
         """
@@ -127,7 +127,7 @@ class Population:
                 min_score=0.0,
                 std_score=0.0,
                 valid_solutions=0,
-                best_solution_id=None
+                best_solution_id=None,
             )
 
         scores = [s.score for s in self.solutions.values()]
@@ -142,12 +142,12 @@ class Population:
             min_score=float(np.min(scores)),
             std_score=float(np.std(scores)),
             valid_solutions=valid_count,
-            best_solution_id=self.best_solution.id if self.best_solution else None
+            best_solution_id=self.best_solution.id if self.best_solution else None,
         )
 
     def get_diversity_score(self) -> float:
         """Calculate diversity score based on solution content.
-        
+
         Returns:
             Diversity score (higher = more diverse)
         """
@@ -164,7 +164,9 @@ class Population:
 
     def __repr__(self) -> str:
         """String representation of population."""
-        return (f"Population(island_id={self.island_id}, "
-                f"size={len(self.solutions)}, "
-                f"generation={self.generation}, "
-                f"best_score={self.best_solution.score if self.best_solution else 'N/A'})")
+        return (
+            f"Population(island_id={self.island_id}, "
+            f"size={len(self.solutions)}, "
+            f"generation={self.generation}, "
+            f"best_score={self.best_solution.score if self.best_solution else 'N/A'})"
+        )

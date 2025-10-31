@@ -14,12 +14,11 @@ from ..llm.prompt_manager import PromptManager
 class MutationOperator:
     """Handles mutation operations on solutions."""
 
-    def __init__(self,
-                 llm: BaseLLM,
-                 evaluator: BaseEvaluator,
-                 prompt_manager: PromptManager):
+    def __init__(
+        self, llm: BaseLLM, evaluator: BaseEvaluator, prompt_manager: PromptManager
+    ):
         """Initialize mutation operator.
-        
+
         Args:
             llm: LLM interface for generation
             evaluator: Solution evaluator
@@ -29,16 +28,18 @@ class MutationOperator:
         self.evaluator = evaluator
         self.prompt_manager = prompt_manager
 
-    def mutate(self,
-               problem: Problem,
-               solution: Solution,
-               conversation: ConversationThread,
-               turn: int = 1,
-               temperature: float = 1.0,
-               mutation_strength: float = 0.5,
-               enable_critic: bool = True) -> Solution:
+    def mutate(
+        self,
+        problem: Problem,
+        solution: Solution,
+        conversation: ConversationThread,
+        turn: int = 1,
+        temperature: float = 1.0,
+        mutation_strength: float = 0.5,
+        enable_critic: bool = True,
+    ) -> Solution:
         """Perform mutation operation on a solution.
-        
+
         Args:
             problem: Problem to solve
             solution: Solution to mutate
@@ -47,12 +48,13 @@ class MutationOperator:
             temperature: LLM temperature
             mutation_strength: Strength of mutation (0.0 to 1.0)
             enable_critic: Whether to use critic analysis
-            
+
         Returns:
             Mutated solution
         """
-        logger.debug(f"Mutating solution {solution.id[:8]} "
-                    f"with strength {mutation_strength}")
+        logger.debug(
+            f"Mutating solution {solution.id[:8]} with strength {mutation_strength}"
+        )
 
         # Adjust temperature based on mutation strength
         mutation_temperature = temperature * (1.0 + mutation_strength)
@@ -63,7 +65,7 @@ class MutationOperator:
             critic_response = self._generate_mutation_critique(
                 problem=problem,
                 solution=solution,
-                temperature=mutation_temperature * 0.8
+                temperature=mutation_temperature * 0.8,
             )
 
         # Generate mutated solution
@@ -74,49 +76,47 @@ class MutationOperator:
             conversation=conversation,
             turn=turn,
             temperature=mutation_temperature,
-            mutation_strength=mutation_strength
+            mutation_strength=mutation_strength,
         )
 
-        logger.debug(f"Mutation produced solution {mutated_solution.id[:8]} "
-                    f"with score {mutated_solution.score:.3f}")
+        logger.debug(
+            f"Mutation produced solution {mutated_solution.id[:8]} "
+            f"with score {mutated_solution.score:.3f}"
+        )
 
         return mutated_solution
 
-    def _generate_mutation_critique(self,
-                                  problem: Problem,
-                                  solution: Solution,
-                                  temperature: float) -> str:
+    def _generate_mutation_critique(
+        self, problem: Problem, solution: Solution, temperature: float
+    ) -> str:
         """Generate critique for mutation guidance.
-        
+
         Args:
             problem: Problem context
             solution: Solution to analyze
             temperature: LLM temperature
-            
+
         Returns:
             Critic's analysis
         """
         critic_prompt = self.prompt_manager.create_critic_prompt(
-            problem=problem,
-            solution=solution,
-            feedback=solution.feedback
+            problem=problem, solution=solution, feedback=solution.feedback
         )
 
-        return self.llm.generate(
-            prompt=critic_prompt,
-            temperature=temperature
-        )
+        return self.llm.generate(prompt=critic_prompt, temperature=temperature)
 
-    def _generate_mutated_solution(self,
-                                 problem: Problem,
-                                 original_solution: Solution,
-                                 critic_analysis: str,
-                                 conversation: ConversationThread,
-                                 turn: int,
-                                 temperature: float,
-                                 mutation_strength: float) -> Solution:
+    def _generate_mutated_solution(
+        self,
+        problem: Problem,
+        original_solution: Solution,
+        critic_analysis: str,
+        conversation: ConversationThread,
+        turn: int,
+        temperature: float,
+        mutation_strength: float,
+    ) -> Solution:
         """Generate mutated version of original solution.
-        
+
         Args:
             problem: Problem to solve
             original_solution: Original solution
@@ -125,7 +125,7 @@ class MutationOperator:
             turn: Turn number
             temperature: LLM temperature
             mutation_strength: Mutation strength
-            
+
         Returns:
             Mutated solution
         """
@@ -134,13 +134,12 @@ class MutationOperator:
             problem=problem,
             solution=original_solution,
             critic_analysis=critic_analysis,
-            mutation_strength=mutation_strength
+            mutation_strength=mutation_strength,
         )
 
         # Generate mutated solution
         author_response = self.llm.generate(
-            prompt=mutation_prompt,
-            temperature=temperature
+            prompt=mutation_prompt, temperature=temperature
         )
 
         # Parse solution content
@@ -160,47 +159,53 @@ class MutationOperator:
             conversation_id=conversation.id,
             parent_ids=[original_solution.id],
             metadata={
-                'turn': turn,
-                'mutation': True,
-                'mutation_strength': mutation_strength,
-                'original_score': original_solution.score,
-                'temperature': temperature,
-                'critic_analysis_length': len(critic_analysis)
+                "turn": turn,
+                "mutation": True,
+                "mutation_strength": mutation_strength,
+                "original_score": original_solution.score,
+                "temperature": temperature,
+                "critic_analysis_length": len(critic_analysis),
             },
-            timestamp=datetime.now()
+            timestamp=datetime.now(),
         )
 
         return mutated_solution
 
-    def _create_mutation_prompt(self,
-                              problem: Problem,
-                              solution: Solution,
-                              critic_analysis: str,
-                              mutation_strength: float) -> str:
+    def _create_mutation_prompt(
+        self,
+        problem: Problem,
+        solution: Solution,
+        critic_analysis: str,
+        mutation_strength: float,
+    ) -> str:
         """Create prompt for mutation operation.
-        
+
         Args:
             problem: Problem context
             solution: Original solution
             critic_analysis: Critic's analysis
             mutation_strength: Mutation strength
-            
+
         Returns:
             Mutation prompt
         """
         if mutation_strength < 0.3:
             mutation_instruction = "Make MINOR modifications to improve the solution while keeping the core approach."
         elif mutation_strength < 0.7:
-            mutation_instruction = "Make MODERATE changes to significantly improve the solution."
+            mutation_instruction = (
+                "Make MODERATE changes to significantly improve the solution."
+            )
         else:
-            mutation_instruction = "Make MAJOR changes or try a completely different approach."
+            mutation_instruction = (
+                "Make MAJOR changes or try a completely different approach."
+            )
 
         # Use the author prompt as base and add mutation-specific instructions
         base_prompt = self.prompt_manager.create_author_prompt(
             problem=problem,
             solution=solution,
             feedback=solution.feedback,
-            critic_analysis=critic_analysis
+            critic_analysis=critic_analysis,
         )
 
         mutation_prompt = f"""{base_prompt}
@@ -218,10 +223,10 @@ Generate your mutated solution now:"""
 
     def _parse_solution_content(self, llm_response: str) -> str:
         """Parse solution content from LLM response.
-        
+
         Args:
             llm_response: Raw LLM response
-            
+
         Returns:
             Cleaned solution content
         """
@@ -240,22 +245,21 @@ Generate your mutated solution now:"""
 
         for prefix in prefixes_to_remove:
             if content.lower().startswith(prefix.lower()):
-                content = content[len(prefix):].strip()
+                content = content[len(prefix) :].strip()
                 break
 
         return content
 
-    def random_mutation(self,
-                       problem: Problem,
-                       solution: Solution,
-                       num_changes: int = 1) -> str:
+    def random_mutation(
+        self, problem: Problem, solution: Solution, num_changes: int = 1
+    ) -> str:
         """Perform random textual mutations on solution.
-        
+
         Args:
             problem: Problem context
             solution: Solution to mutate
             num_changes: Number of random changes to make
-            
+
         Returns:
             Randomly mutated solution content
         """
@@ -268,43 +272,48 @@ Generate your mutated solution now:"""
         mutated_words = words.copy()
 
         for _ in range(min(num_changes, len(words) // 4)):
-            mutation_type = random.choice(['replace', 'insert', 'delete', 'swap'])
+            mutation_type = random.choice(["replace", "insert", "delete", "swap"])
 
-            if mutation_type == 'replace' and len(words) > 0:
+            if mutation_type == "replace" and len(words) > 0:
                 idx = random.randint(0, len(mutated_words) - 1)
                 # Replace with a similar word (simplified)
-                synonyms = ['improved', 'enhanced', 'better', 'optimized', 'refined']
+                synonyms = ["improved", "enhanced", "better", "optimized", "refined"]
                 mutated_words[idx] = random.choice(synonyms)
 
-            elif mutation_type == 'insert':
+            elif mutation_type == "insert":
                 idx = random.randint(0, len(mutated_words))
-                insertions = ['additionally', 'furthermore', 'moreover', 'also']
+                insertions = ["additionally", "furthermore", "moreover", "also"]
                 mutated_words.insert(idx, random.choice(insertions))
 
-            elif mutation_type == 'delete' and len(mutated_words) > 5:
+            elif mutation_type == "delete" and len(mutated_words) > 5:
                 idx = random.randint(0, len(mutated_words) - 1)
                 mutated_words.pop(idx)
 
-            elif mutation_type == 'swap' and len(mutated_words) > 1:
+            elif mutation_type == "swap" and len(mutated_words) > 1:
                 idx1 = random.randint(0, len(mutated_words) - 1)
                 idx2 = random.randint(0, len(mutated_words) - 1)
-                mutated_words[idx1], mutated_words[idx2] = mutated_words[idx2], mutated_words[idx1]
+                mutated_words[idx1], mutated_words[idx2] = (
+                    mutated_words[idx2],
+                    mutated_words[idx1],
+                )
 
-        return ' '.join(mutated_words)
+        return " ".join(mutated_words)
 
-    def guided_mutation(self,
-                       problem: Problem,
-                       solution: Solution,
-                       feedback_focus: list[str] | None = None,
-                       temperature: float = 1.0) -> Solution:
+    def guided_mutation(
+        self,
+        problem: Problem,
+        solution: Solution,
+        feedback_focus: list[str] | None = None,
+        temperature: float = 1.0,
+    ) -> Solution:
         """Perform guided mutation based on specific feedback.
-        
+
         Args:
             problem: Problem to solve
             solution: Solution to mutate
             feedback_focus: Specific feedback items to address
             temperature: LLM temperature
-            
+
         Returns:
             Guided mutated solution
         """
@@ -315,14 +324,13 @@ Generate your mutated solution now:"""
             generation=solution.generation,
             parent_solutions=[solution],
             children=[],
-            turns=[]
+            turns=[],
         )
 
         # Create focused feedback if provided
         if feedback_focus:
             focused_solution = Solution(
-                **solution.model_dump(),
-                feedback=feedback_focus
+                **solution.model_dump(), feedback=feedback_focus
             )
         else:
             focused_solution = solution
@@ -333,22 +341,24 @@ Generate your mutated solution now:"""
             conversation=conversation,
             temperature=temperature,
             mutation_strength=0.5,
-            enable_critic=True
+            enable_critic=True,
         )
 
-    def adaptive_mutation(self,
-                         problem: Problem,
-                         solution: Solution,
-                         population_diversity: float,
-                         temperature: float = 1.0) -> Solution:
+    def adaptive_mutation(
+        self,
+        problem: Problem,
+        solution: Solution,
+        population_diversity: float,
+        temperature: float = 1.0,
+    ) -> Solution:
         """Perform adaptive mutation based on population diversity.
-        
+
         Args:
             problem: Problem to solve
             solution: Solution to mutate
             population_diversity: Current population diversity score
             temperature: LLM temperature
-            
+
         Returns:
             Adaptively mutated solution
         """
@@ -369,7 +379,7 @@ Generate your mutated solution now:"""
             generation=solution.generation,
             parent_solutions=[solution],
             children=[],
-            turns=[]
+            turns=[],
         )
 
         return self.mutate(
@@ -378,5 +388,5 @@ Generate your mutated solution now:"""
             conversation=conversation,
             temperature=temperature,
             mutation_strength=mutation_strength,
-            enable_critic=True
+            enable_critic=True,
         )

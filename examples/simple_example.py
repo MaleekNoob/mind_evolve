@@ -37,17 +37,17 @@ def main():
             "Must feature a robot as the main character",
             "Must explore the theme of emotions or consciousness",
             "Should have a clear beginning, middle, and end",
-            "Writing should be engaging and creative"
-        ]
+            "Writing should be engaging and creative",
+        ],
     )
 
     # Create configuration
     config = MindEvolutionConfig(
-        N_gens=5,           # 5 generations (quick example)
-        N_island=2,         # 2 islands
-        N_convs=3,          # 3 conversations per island per generation
-        N_seq=3,            # 3 refinement turns per conversation
-        temperature=0.8,    # Slightly lower temperature for more focused responses
+        N_gens=5,  # 5 generations (quick example)
+        N_island=2,  # 2 islands
+        N_convs=3,  # 3 conversations per island per generation
+        N_seq=3,  # 3 refinement turns per conversation
+        temperature=0.8,  # Slightly lower temperature for more focused responses
         model_name="gpt-3.5-turbo",  # Use cheaper model for example
         early_stopping=True,
         enable_critic=True,
@@ -61,23 +61,23 @@ def main():
     llm = create_llm("openai", config.model_name)
 
     # Create evaluator
-    evaluator = create_evaluator("constraint", constraint_weights={
-        "length": 1.0,
-        "character": 2.0,
-        "theme": 2.0,
-        "structure": 1.5,
-        "creativity": 1.0,
-    })
+    evaluator = create_evaluator(
+        "constraint",
+        constraint_weights={
+            "length": 1.0,
+            "character": 2.0,
+            "theme": 2.0,
+            "structure": 1.5,
+            "creativity": 1.0,
+        },
+    )
 
     # Create prompt manager
     prompt_manager = PromptManager(task_type="creative_writing")
 
     # Initialize Mind Evolution
     mind_evolution = MindEvolution(
-        config=config,
-        llm=llm,
-        evaluator=evaluator,
-        prompt_manager=prompt_manager
+        config=config, llm=llm, evaluator=evaluator, prompt_manager=prompt_manager
     )
 
     # Solve the problem
@@ -88,9 +88,9 @@ def main():
     best_solution = mind_evolution.solve(problem, "simple_example")
 
     # Display results
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EVOLUTION COMPLETE!")
-    print("="*60)
+    print("=" * 60)
     print(f"Best Solution Score: {best_solution.score:.3f}")
     print(f"Valid Solution: {'Yes' if best_solution.is_valid() else 'No'}")
     print(f"Generation: {best_solution.generation}")
@@ -111,8 +111,8 @@ def main():
     print(f"• Generations completed: {stats['generations_completed']}")
     print(f"• Global best score: {stats['global_best_score']:.3f}")
 
-    if 'performance_metrics' in stats:
-        perf = stats['performance_metrics']
+    if "performance_metrics" in stats:
+        perf = stats["performance_metrics"]
         print(f"• Runtime: {perf['runtime_minutes']:.2f} minutes")
         print(f"• Solutions generated: {perf.get('total_solutions_generated', 'N/A')}")
         print(f"• Success rate: {perf.get('success_rate', 0):.1f}%")

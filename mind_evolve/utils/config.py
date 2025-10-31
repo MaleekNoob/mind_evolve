@@ -39,18 +39,23 @@ class SystemConfig(BaseModel):
     request_timeout: int = Field(default=60, ge=10, le=300)
     max_retries: int = Field(default=3, ge=1, le=10)
 
-    @validator('data_dir', 'logs_dir', 'checkpoints_dir', 'cache_dir')
+    @validator("data_dir", "logs_dir", "checkpoints_dir", "cache_dir")
     def make_paths_absolute(cls, v, values):
         """Convert relative paths to absolute paths."""
         if isinstance(v, str):
             v = Path(v)
-        if not v.is_absolute() and 'project_root' in values:
-            return values['project_root'] / v
+        if not v.is_absolute() and "project_root" in values:
+            return values["project_root"] / v
         return v
 
     def create_directories(self) -> None:
         """Create necessary directories."""
-        for dir_path in [self.data_dir, self.logs_dir, self.checkpoints_dir, self.cache_dir]:
+        for dir_path in [
+            self.data_dir,
+            self.logs_dir,
+            self.checkpoints_dir,
+            self.cache_dir,
+        ]:
             dir_path.mkdir(parents=True, exist_ok=True)
 
 
@@ -64,7 +69,9 @@ class ExperimentConfig(BaseModel):
     mind_evolution: MindEvolutionConfig = Field(default_factory=MindEvolutionConfig)
 
     # LLM Configuration
-    llm_provider: str = Field(default="openai", description="LLM provider (openai, anthropic, google)")
+    llm_provider: str = Field(
+        default="openai", description="LLM provider (openai, anthropic, google)"
+    )
     llm_model: str = Field(default="gpt-4", description="LLM model name")
 
     # Evaluator Configuration
@@ -79,13 +86,17 @@ class ExperimentConfig(BaseModel):
     save_solutions: bool = Field(default=True)
     save_conversations: bool = Field(default=True)
     save_statistics: bool = Field(default=True)
-    output_format: str = Field(default="json", description="Output format (json, csv, both)")
+    output_format: str = Field(
+        default="json", description="Output format (json, csv, both)"
+    )
 
     # Experiment Control
-    random_seed: int | None = Field(default=None, description="Random seed for reproducibility")
+    random_seed: int | None = Field(
+        default=None, description="Random seed for reproducibility"
+    )
     max_runtime_minutes: int | None = Field(default=None, description="Maximum runtime")
 
-    @validator('llm_provider')
+    @validator("llm_provider")
     def validate_llm_provider(cls, v):
         """Validate LLM provider."""
         valid_providers = ["openai", "anthropic", "google"]
@@ -99,7 +110,7 @@ class ConfigManager:
 
     def __init__(self, config_path: Path | None = None):
         """Initialize configuration manager.
-        
+
         Args:
             config_path: Path to configuration file
         """
@@ -109,10 +120,10 @@ class ConfigManager:
 
     def load_system_config(self, config_path: Path | None = None) -> SystemConfig:
         """Load system configuration.
-        
+
         Args:
             config_path: Optional config file path
-            
+
         Returns:
             Loaded system configuration
         """
@@ -136,10 +147,10 @@ class ConfigManager:
 
     def load_experiment_config(self, config_path: Path) -> ExperimentConfig:
         """Load experiment configuration.
-        
+
         Args:
             config_path: Path to experiment config file
-            
+
         Returns:
             Loaded experiment configuration
         """
@@ -153,10 +164,10 @@ class ConfigManager:
 
     def _load_config_file(self, config_path: Path) -> dict[str, Any]:
         """Load configuration from file.
-        
+
         Args:
             config_path: Path to config file
-            
+
         Returns:
             Configuration dictionary
         """
@@ -164,10 +175,10 @@ class ConfigManager:
 
         import yaml
 
-        if config_path.suffix.lower() in ['.yml', '.yaml']:
+        if config_path.suffix.lower() in [".yml", ".yaml"]:
             with open(config_path) as f:
                 return yaml.safe_load(f) or {}
-        elif config_path.suffix.lower() == '.json':
+        elif config_path.suffix.lower() == ".json":
             with open(config_path) as f:
                 return json.load(f)
         else:
@@ -175,33 +186,33 @@ class ConfigManager:
 
     def _load_env_config(self) -> dict[str, Any]:
         """Load configuration from environment variables.
-        
+
         Returns:
             Environment configuration dictionary
         """
         env_config = {}
 
         # API Keys
-        if os.getenv('OPENAI_API_KEY'):
-            env_config['openai_api_key'] = os.getenv('OPENAI_API_KEY')
-        if os.getenv('ANTHROPIC_API_KEY'):
-            env_config['anthropic_api_key'] = os.getenv('ANTHROPIC_API_KEY')
-        if os.getenv('GOOGLE_API_KEY'):
-            env_config['google_api_key'] = os.getenv('GOOGLE_API_KEY')
+        if os.getenv("OPENAI_API_KEY"):
+            env_config["openai_api_key"] = os.getenv("OPENAI_API_KEY")
+        if os.getenv("ANTHROPIC_API_KEY"):
+            env_config["anthropic_api_key"] = os.getenv("ANTHROPIC_API_KEY")
+        if os.getenv("GOOGLE_API_KEY"):
+            env_config["google_api_key"] = os.getenv("GOOGLE_API_KEY")
 
         # Logging
-        if os.getenv('LOG_LEVEL'):
-            env_config['log_level'] = os.getenv('LOG_LEVEL')
+        if os.getenv("LOG_LEVEL"):
+            env_config["log_level"] = os.getenv("LOG_LEVEL")
 
         # Performance
-        if os.getenv('MAX_WORKERS'):
-            env_config['max_workers'] = int(os.getenv('MAX_WORKERS'))
+        if os.getenv("MAX_WORKERS"):
+            env_config["max_workers"] = int(os.getenv("MAX_WORKERS"))
 
         return env_config
 
     def save_config(self, config: BaseModel, output_path: Path) -> None:
         """Save configuration to file.
-        
+
         Args:
             config: Configuration object
             output_path: Output file path
@@ -227,18 +238,18 @@ class ConfigManager:
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        if output_path.suffix.lower() in ['.yml', '.yaml']:
-            with open(output_path, 'w') as f:
+        if output_path.suffix.lower() in [".yml", ".yaml"]:
+            with open(output_path, "w") as f:
                 yaml.dump(config_dict, f, default_flow_style=False, indent=2)
-        elif output_path.suffix.lower() == '.json':
-            with open(output_path, 'w') as f:
+        elif output_path.suffix.lower() == ".json":
+            with open(output_path, "w") as f:
                 json.dump(config_dict, f, indent=2)
         else:
             raise ValueError(f"Unsupported output format: {output_path.suffix}")
 
     def create_experiment_config_template(self, output_path: Path) -> None:
         """Create a template experiment configuration file.
-        
+
         Args:
             output_path: Path to save template
         """
@@ -251,10 +262,10 @@ class ConfigManager:
 
     def get_api_key(self, provider: str) -> str | None:
         """Get API key for specified provider.
-        
+
         Args:
             provider: LLM provider name
-            
+
         Returns:
             API key if available
         """
@@ -262,9 +273,9 @@ class ConfigManager:
             self.load_system_config()
 
         key_mapping = {
-            'openai': self.system_config.openai_api_key,
-            'anthropic': self.system_config.anthropic_api_key,
-            'google': self.system_config.google_api_key,
+            "openai": self.system_config.openai_api_key,
+            "anthropic": self.system_config.anthropic_api_key,
+            "google": self.system_config.google_api_key,
         }
 
         return key_mapping.get(provider)

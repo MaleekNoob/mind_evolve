@@ -22,10 +22,8 @@ __all__ = [
     "SimpleScoreEvaluator",
     "ConstraintBasedEvaluator",
     "create_evaluator",
-
     # Feedback
     "FeedbackGenerator",
-
     # Scoring
     "ScoringFunction",
     "LengthBasedScoring",

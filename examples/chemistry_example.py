@@ -59,25 +59,25 @@ def main():
             "Discuss reaction thermodynamics and kinetics where relevant",
             "Address potential scalability and industrial considerations",
             "Include safety data and handling precautions",
-            "Solution should be at graduate-level organic chemistry depth"
+            "Solution should be at graduate-level organic chemistry depth",
         ],
         examples=[
             {
                 "input": "Synthesis of chiral alcohol from ketone precursor",
-                "output": "Complete synthetic route with mechanism and stereochemical analysis"
+                "output": "Complete synthetic route with mechanism and stereochemical analysis",
             }
-        ]
+        ],
     )
 
     # Create configuration optimized for chemistry problems
     config = MindEvolutionConfig(
-        N_gens=12,          # More generations for complex synthesis design
-        N_island=4,         # Multiple approaches to synthesis
-        N_convs=4,          # Thorough exploration of synthetic routes
-        N_seq=4,            # Refinement of mechanisms and selectivity
-        temperature=0.7,    # Balanced creativity and precision
-        model_name="gpt-4", # Use most capable model for chemistry
-        early_stopping=False, # Don't stop early for complex synthesis
+        N_gens=12,  # More generations for complex synthesis design
+        N_island=4,  # Multiple approaches to synthesis
+        N_convs=4,  # Thorough exploration of synthetic routes
+        N_seq=4,  # Refinement of mechanisms and selectivity
+        temperature=0.7,  # Balanced creativity and precision
+        model_name="gpt-4",  # Use most capable model for chemistry
+        early_stopping=False,  # Don't stop early for complex synthesis
         enable_critic=True,
         enable_feedback=True,
         max_retries=3,
@@ -90,29 +90,29 @@ def main():
     llm = create_llm("openai", config.model_name)
 
     # Create specialized evaluator for chemistry
-    evaluator = create_evaluator("constraint", constraint_weights={
-        "synthetic_efficiency": 2.5,   # Route efficiency and step count
-        "mechanism_accuracy": 2.5,     # Correct mechanisms and arrows
-        "stereochemistry": 2.0,        # Proper stereochemical analysis
-        "regioselectivity": 1.5,       # Selectivity explanations
-        "yield_calculation": 1.5,      # Realistic yield estimates
-        "safety_considerations": 1.0,   # Safety and handling
-        "analytical_methods": 1.0,     # Product confirmation methods
-        "green_chemistry": 1.0,        # Environmental considerations
-        "scalability": 1.0,            # Industrial applicability
-        "side_reactions": 1.5,         # Side product prediction
-        "nomenclature": 1.0,           # Proper chemical naming
-    })
+    evaluator = create_evaluator(
+        "constraint",
+        constraint_weights={
+            "synthetic_efficiency": 2.5,  # Route efficiency and step count
+            "mechanism_accuracy": 2.5,  # Correct mechanisms and arrows
+            "stereochemistry": 2.0,  # Proper stereochemical analysis
+            "regioselectivity": 1.5,  # Selectivity explanations
+            "yield_calculation": 1.5,  # Realistic yield estimates
+            "safety_considerations": 1.0,  # Safety and handling
+            "analytical_methods": 1.0,  # Product confirmation methods
+            "green_chemistry": 1.0,  # Environmental considerations
+            "scalability": 1.0,  # Industrial applicability
+            "side_reactions": 1.5,  # Side product prediction
+            "nomenclature": 1.0,  # Proper chemical naming
+        },
+    )
 
     # Create prompt manager for chemistry tasks
     prompt_manager = PromptManager(task_type="scientific")
 
     # Initialize Mind Evolution
     mind_evolution = MindEvolution(
-        config=config,
-        llm=llm,
-        evaluator=evaluator,
-        prompt_manager=prompt_manager
+        config=config, llm=llm, evaluator=evaluator, prompt_manager=prompt_manager
     )
 
     # Solve the chemistry problem
@@ -124,9 +124,9 @@ def main():
     best_solution = mind_evolution.solve(problem, "chemistry_example")
 
     # Display results
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("ORGANIC SYNTHESIS CHALLENGE EVOLUTION COMPLETE!")
-    print("="*80)
+    print("=" * 80)
     print(f"Best Solution Score: {best_solution.score:.3f}")
     print(f"Valid Solution: {'Yes' if best_solution.is_valid() else 'No'}")
     print(f"Generation: {best_solution.generation}")
@@ -156,8 +156,8 @@ def main():
     print(f"• Generations completed: {stats['generations_completed']}")
     print(f"• Global best score: {stats['global_best_score']:.3f}")
 
-    if 'performance_metrics' in stats:
-        perf = stats['performance_metrics']
+    if "performance_metrics" in stats:
+        perf = stats["performance_metrics"]
         print(f"• Runtime: {perf['runtime_minutes']:.2f} minutes")
         print(f"• Solutions generated: {perf.get('total_solutions_generated', 'N/A')}")
         print(f"• Success rate: {perf.get('success_rate', 0):.1f}%")
@@ -208,8 +208,8 @@ def main():
         f.write("\nEvolution Statistics:\n")
         f.write(f"• Generations: {stats['generations_completed']}\n")
         f.write(f"• Best score: {stats['global_best_score']:.3f}\n")
-        if 'performance_metrics' in stats:
-            perf = stats['performance_metrics']
+        if "performance_metrics" in stats:
+            perf = stats["performance_metrics"]
             f.write(f"• Runtime: {perf['runtime_minutes']:.2f} minutes\n")
 
     print("\nResults saved to 'results/' directory")

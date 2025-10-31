@@ -49,25 +49,25 @@ def main():
             "Include test cases with expected outputs",
             "Solution should be efficient for grids up to 100x100",
             "Explain the optimal substructure property",
-            "Must include both recursive and iterative approaches"
+            "Must include both recursive and iterative approaches",
         ],
         examples=[
             {
                 "input": "Grid: [[1, -3, 3], [1, 5, -2], [4, -1, 1]], Energy: 4",
-                "output": "Maximum treasure path with dynamic programming solution"
+                "output": "Maximum treasure path with dynamic programming solution",
             }
-        ]
+        ],
     )
 
     # Create configuration optimized for coding problems
     config = MindEvolutionConfig(
-        N_gens=8,           # More generations for complex problems
-        N_island=3,         # More islands for diverse approaches
-        N_convs=4,          # More conversations for thorough exploration
-        N_seq=4,            # More refinement turns for code quality
-        temperature=0.7,    # Lower temperature for more focused code generation
-        model_name="gpt-4", # Use more capable model for coding
-        early_stopping=False, # Don't stop early for coding problems
+        N_gens=8,  # More generations for complex problems
+        N_island=3,  # More islands for diverse approaches
+        N_convs=4,  # More conversations for thorough exploration
+        N_seq=4,  # More refinement turns for code quality
+        temperature=0.7,  # Lower temperature for more focused code generation
+        model_name="gpt-4",  # Use more capable model for coding
+        early_stopping=False,  # Don't stop early for coding problems
         enable_critic=True,
         enable_feedback=True,
         max_retries=3,
@@ -80,25 +80,25 @@ def main():
     llm = create_llm("openai", config.model_name)
 
     # Create specialized evaluator for code
-    evaluator = create_evaluator("constraint", constraint_weights={
-        "completeness": 2.0,      # Complete working solution
-        "correctness": 2.5,       # Algorithmic correctness
-        "efficiency": 2.0,        # Time/space complexity
-        "code_quality": 1.5,      # Comments, style, practices
-        "edge_cases": 1.5,        # Handling of edge cases
-        "testing": 1.0,           # Test cases included
-        "explanation": 1.5,       # Clear explanations
-    })
+    evaluator = create_evaluator(
+        "constraint",
+        constraint_weights={
+            "completeness": 2.0,  # Complete working solution
+            "correctness": 2.5,  # Algorithmic correctness
+            "efficiency": 2.0,  # Time/space complexity
+            "code_quality": 1.5,  # Comments, style, practices
+            "edge_cases": 1.5,  # Handling of edge cases
+            "testing": 1.0,  # Test cases included
+            "explanation": 1.5,  # Clear explanations
+        },
+    )
 
     # Create prompt manager for coding tasks
     prompt_manager = PromptManager(task_type="coding")
 
     # Initialize Mind Evolution
     mind_evolution = MindEvolution(
-        config=config,
-        llm=llm,
-        evaluator=evaluator,
-        prompt_manager=prompt_manager
+        config=config, llm=llm, evaluator=evaluator, prompt_manager=prompt_manager
     )
 
     # Solve the coding problem
@@ -110,9 +110,9 @@ def main():
     best_solution = mind_evolution.solve(problem, "coding_example")
 
     # Display results
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("CODING CHALLENGE EVOLUTION COMPLETE!")
-    print("="*80)
+    print("=" * 80)
     print(f"Best Solution Score: {best_solution.score:.3f}")
     print(f"Valid Solution: {'Yes' if best_solution.is_valid() else 'No'}")
     print(f"Generation: {best_solution.generation}")
@@ -138,8 +138,8 @@ def main():
     print(f"• Generations completed: {stats['generations_completed']}")
     print(f"• Global best score: {stats['global_best_score']:.3f}")
 
-    if 'performance_metrics' in stats:
-        perf = stats['performance_metrics']
+    if "performance_metrics" in stats:
+        perf = stats["performance_metrics"]
         print(f"• Runtime: {perf['runtime_minutes']:.2f} minutes")
         print(f"• Solutions generated: {perf.get('total_solutions_generated', 'N/A')}")
         print(f"• Success rate: {perf.get('success_rate', 0):.1f}%")

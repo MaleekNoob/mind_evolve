@@ -28,16 +28,13 @@ __all__ = [
     "Problem",
     "Solution",
     "Population",
-
     # LLM interface
     "BaseLLM",
     "create_llm",
     "PromptManager",
-
     # Evaluation
     "BaseEvaluator",
     "create_evaluator",
-
     # Utilities
     "ConfigManager",
     "setup_logging",

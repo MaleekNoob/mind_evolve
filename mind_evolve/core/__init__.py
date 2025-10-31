@@ -24,7 +24,6 @@ __all__ = [
     # Main classes
     "MindEvolution",
     "IslandModel",
-
     # Models
     "Solution",
     "ConversationTurn",
@@ -33,10 +32,8 @@ __all__ = [
     "Problem",
     "MindEvolutionConfig",
     "PopulationStats",
-
     # Population
     "Population",
-
     # Selection
     "SelectionStrategy",
     "BoltzmannTournamentSelection",

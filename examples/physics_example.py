@@ -54,25 +54,25 @@ def main():
             "Mention real-world applications (STM, tunnel diodes, etc.)",
             "Use proper physics notation and units throughout",
             "Include at least one energy diagram or conceptual illustration",
-            "Solution should be at graduate-level physics depth"
+            "Solution should be at graduate-level physics depth",
         ],
         examples=[
             {
                 "input": "Electron tunneling through 1 eV barrier, width 1 nm",
-                "output": "Complete quantum mechanical analysis with transmission coefficient"
+                "output": "Complete quantum mechanical analysis with transmission coefficient",
             }
-        ]
+        ],
     )
 
     # Create configuration optimized for physics problems
     config = MindEvolutionConfig(
-        N_gens=10,          # More generations for complex derivations
-        N_island=4,         # Multiple islands for different approaches
-        N_convs=3,          # Balanced conversations
-        N_seq=5,            # More refinement for mathematical accuracy
-        temperature=0.6,    # Lower temperature for precise mathematical work
-        model_name="gpt-4", # Use most capable model for physics
-        early_stopping=False, # Don't stop early for complex problems
+        N_gens=10,  # More generations for complex derivations
+        N_island=4,  # Multiple islands for different approaches
+        N_convs=3,  # Balanced conversations
+        N_seq=5,  # More refinement for mathematical accuracy
+        temperature=0.6,  # Lower temperature for precise mathematical work
+        model_name="gpt-4",  # Use most capable model for physics
+        early_stopping=False,  # Don't stop early for complex problems
         enable_critic=True,
         enable_feedback=True,
         max_retries=3,
@@ -85,27 +85,27 @@ def main():
     llm = create_llm("openai", config.model_name)
 
     # Create specialized evaluator for physics
-    evaluator = create_evaluator("constraint", constraint_weights={
-        "mathematical_rigor": 2.5,    # Correct equations and derivations
-        "physical_insight": 2.0,      # Deep physics understanding
-        "completeness": 2.0,          # All required components
-        "numerical_accuracy": 1.5,    # Correct calculations
-        "notation": 1.0,              # Proper physics notation
-        "interpretation": 1.5,        # Physical meaning explained
-        "applications": 1.0,          # Real-world relevance
-        "boundary_conditions": 2.0,   # Proper application of BCs
-        "conservation_laws": 1.5,     # R + T = 1 verification
-    })
+    evaluator = create_evaluator(
+        "constraint",
+        constraint_weights={
+            "mathematical_rigor": 2.5,  # Correct equations and derivations
+            "physical_insight": 2.0,  # Deep physics understanding
+            "completeness": 2.0,  # All required components
+            "numerical_accuracy": 1.5,  # Correct calculations
+            "notation": 1.0,  # Proper physics notation
+            "interpretation": 1.5,  # Physical meaning explained
+            "applications": 1.0,  # Real-world relevance
+            "boundary_conditions": 2.0,  # Proper application of BCs
+            "conservation_laws": 1.5,  # R + T = 1 verification
+        },
+    )
 
     # Create prompt manager for physics tasks
     prompt_manager = PromptManager(task_type="scientific")
 
     # Initialize Mind Evolution
     mind_evolution = MindEvolution(
-        config=config,
-        llm=llm,
-        evaluator=evaluator,
-        prompt_manager=prompt_manager
+        config=config, llm=llm, evaluator=evaluator, prompt_manager=prompt_manager
     )
 
     # Solve the physics problem
@@ -117,9 +117,9 @@ def main():
     best_solution = mind_evolution.solve(problem, "physics_example")
 
     # Display results
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("QUANTUM PHYSICS CHALLENGE EVOLUTION COMPLETE!")
-    print("="*80)
+    print("=" * 80)
     print(f"Best Solution Score: {best_solution.score:.3f}")
     print(f"Valid Solution: {'Yes' if best_solution.is_valid() else 'No'}")
     print(f"Generation: {best_solution.generation}")
@@ -149,8 +149,8 @@ def main():
     print(f"• Generations completed: {stats['generations_completed']}")
     print(f"• Global best score: {stats['global_best_score']:.3f}")
 
-    if 'performance_metrics' in stats:
-        perf = stats['performance_metrics']
+    if "performance_metrics" in stats:
+        perf = stats["performance_metrics"]
         print(f"• Runtime: {perf['runtime_minutes']:.2f} minutes")
         print(f"• Solutions generated: {perf.get('total_solutions_generated', 'N/A')}")
         print(f"• Success rate: {perf.get('success_rate', 0):.1f}%")
@@ -183,7 +183,9 @@ def main():
         f.write("\\begin{document}\n")
         f.write("\\maketitle\n\n")
         # Convert markdown-style content to basic LaTeX
-        latex_content = best_solution.content.replace("**", "\\textbf{").replace("**", "}")
+        latex_content = best_solution.content.replace("**", "\\textbf{").replace(
+            "**", "}"
+        )
         f.write(latex_content)
         f.write("\n\\end{document}\n")
 
@@ -201,8 +203,8 @@ def main():
         f.write("\nEvolution Statistics:\n")
         f.write(f"• Generations: {stats['generations_completed']}\n")
         f.write(f"• Best score: {stats['global_best_score']:.3f}\n")
-        if 'performance_metrics' in stats:
-            perf = stats['performance_metrics']
+        if "performance_metrics" in stats:
+            perf = stats["performance_metrics"]
             f.write(f"• Runtime: {perf['runtime_minutes']:.2f} minutes\n")
 
     print("\nResults saved to 'results/' directory")

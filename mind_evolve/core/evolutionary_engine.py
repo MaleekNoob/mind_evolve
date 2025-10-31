@@ -15,13 +15,15 @@ from .models import MindEvolutionConfig, Problem, Solution
 class MindEvolution:
     """Main evolutionary search engine for LLM-based problem solving."""
 
-    def __init__(self,
-                 config: MindEvolutionConfig,
-                 llm: BaseLLM,
-                 evaluator: BaseEvaluator,
-                 prompt_manager: PromptManager):
+    def __init__(
+        self,
+        config: MindEvolutionConfig,
+        llm: BaseLLM,
+        evaluator: BaseEvaluator,
+        prompt_manager: PromptManager,
+    ):
         """Initialize Mind Evolution engine.
-        
+
         Args:
             config: Evolution configuration
             llm: LLM interface
@@ -39,14 +41,13 @@ class MindEvolution:
         # Metrics collection
         self.metrics_collector: MetricsCollector | None = None
 
-    def solve(self, problem: Problem,
-             experiment_name: str | None = None) -> Solution:
+    def solve(self, problem: Problem, experiment_name: str | None = None) -> Solution:
         """Solve a problem using Mind Evolution.
-        
+
         Args:
             problem: Problem definition
             experiment_name: Optional experiment name for tracking
-            
+
         Returns:
             Best solution found
         """
@@ -55,8 +56,10 @@ class MindEvolution:
             self.metrics_collector = MetricsCollector(experiment_name)
 
         logger.info(f"Starting Mind Evolution for problem: {problem.title}")
-        logger.info(f"Configuration: {self.config.N_gens} generations, "
-                   f"{self.config.N_island} islands, {self.config.N_convs} conversations")
+        logger.info(
+            f"Configuration: {self.config.N_gens} generations, "
+            f"{self.config.N_island} islands, {self.config.N_convs} conversations"
+        )
 
         try:
             # Initialize populations
@@ -68,9 +71,14 @@ class MindEvolution:
                 self._run_generation(generation, problem)
 
                 # Check early stopping
-                if self.config.early_stopping and self.island_model.has_valid_solution():
-                    logger.info(f"Valid solution found at generation {generation}. "
-                               f"Early stopping enabled.")
+                if (
+                    self.config.early_stopping
+                    and self.island_model.has_valid_solution()
+                ):
+                    logger.info(
+                        f"Valid solution found at generation {generation}. "
+                        f"Early stopping enabled."
+                    )
                     break
 
         except KeyboardInterrupt:
@@ -90,21 +98,25 @@ class MindEvolution:
                 feedback=["Evolution failed to generate solutions"],
                 generation=0,
                 island_id=0,
-                conversation_id="failed"
+                conversation_id="failed",
             )
 
-        logger.info(f"Evolution completed. Best solution score: {best_solution.score:.3f}")
+        logger.info(
+            f"Evolution completed. Best solution score: {best_solution.score:.3f}"
+        )
 
         # Finalize metrics
         if self.metrics_collector:
             final_metrics = self.metrics_collector.finalize_experiment()
-            logger.info(f"Experiment metrics: {self.metrics_collector.get_performance_summary()}")
+            logger.info(
+                f"Experiment metrics: {self.metrics_collector.get_performance_summary()}"
+            )
 
         return best_solution
 
     def _run_generation(self, generation: int, problem: Problem) -> None:
         """Run a single generation of evolution.
-        
+
         Args:
             generation: Generation number
             problem: Problem being solved
@@ -129,9 +141,7 @@ class MindEvolution:
         # Perform island reset if needed
         reset_islands = self.island_model.perform_island_reset()
         if reset_islands and self.metrics_collector:
-            self.metrics_collector.record_island_reset(
-                reset_islands, self.config.N_top
-            )
+            self.metrics_collector.record_island_reset(reset_islands, self.config.N_top)
 
         # Update generation counter
         self.island_model.increment_generation()
@@ -146,7 +156,8 @@ class MindEvolution:
             for island_id, stats in island_stats.items():
                 # Convert to PopulationStats format
                 from .models import PopulationStats
-                after_stats = stats['after']
+
+                after_stats = stats["after"]
                 pop_stats = PopulationStats(**after_stats)
                 population_stats[island_id] = pop_stats
 
@@ -154,20 +165,24 @@ class MindEvolution:
                 generation, population_stats, self.island_model.global_best
             )
 
-    def _log_generation_summary(self, generation: int,
-                              island_stats: dict,
-                              generation_time: float) -> None:
+    def _log_generation_summary(
+        self, generation: int, island_stats: dict, generation_time: float
+    ) -> None:
         """Log summary of generation results.
-        
+
         Args:
             generation: Generation number
             island_stats: Statistics from island evolution
             generation_time: Time taken for generation
         """
         # Calculate aggregate statistics
-        total_improvement = sum(stats['improvement'] for stats in island_stats.values())
-        best_island_score = max(stats['after']['max_score'] for stats in island_stats.values())
-        avg_island_score = sum(stats['after']['mean_score'] for stats in island_stats.values()) / len(island_stats)
+        total_improvement = sum(stats["improvement"] for stats in island_stats.values())
+        best_island_score = max(
+            stats["after"]["max_score"] for stats in island_stats.values()
+        )
+        avg_island_score = sum(
+            stats["after"]["mean_score"] for stats in island_stats.values()
+        ) / len(island_stats)
 
         logger.info(f"✅ Generation {generation} completed in {generation_time:.2f}s")
         logger.info(f"   Best score: {best_island_score:.3f}")
@@ -176,36 +191,46 @@ class MindEvolution:
 
         # Log individual island performance
         for island_id, stats in island_stats.items():
-            before_score = stats['before']['max_score']
-            after_score = stats['after']['max_score']
-            improvement = stats['improvement']
+            before_score = stats["before"]["max_score"]
+            after_score = stats["after"]["max_score"]
+            improvement = stats["improvement"]
 
-            logger.debug(f"   Island {island_id}: {before_score:.3f} → "
-                        f"{after_score:.3f} ({improvement:+.3f})")
+            logger.debug(
+                f"   Island {island_id}: {before_score:.3f} → "
+                f"{after_score:.3f} ({improvement:+.3f})"
+            )
 
     def get_evolution_statistics(self) -> dict:
         """Get comprehensive evolution statistics.
-        
+
         Returns:
             Dictionary with evolution statistics
         """
         stats = {
-            'generations_completed': self.island_model.generation,
-            'total_islands': len(self.island_model.islands),
-            'global_best_score': self.island_model.global_best.score if self.island_model.global_best else 0.0,
-            'population_statistics': self.island_model.get_population_statistics(),
-            'best_solutions': [s.model_dump() for s in self.island_model.get_best_solutions(10)],
+            "generations_completed": self.island_model.generation,
+            "total_islands": len(self.island_model.islands),
+            "global_best_score": self.island_model.global_best.score
+            if self.island_model.global_best
+            else 0.0,
+            "population_statistics": self.island_model.get_population_statistics(),
+            "best_solutions": [
+                s.model_dump() for s in self.island_model.get_best_solutions(10)
+            ],
         }
 
         if self.metrics_collector:
-            stats['performance_metrics'] = self.metrics_collector.get_performance_summary()
-            stats['convergence_analysis'] = self.metrics_collector.get_convergence_analysis()
+            stats["performance_metrics"] = (
+                self.metrics_collector.get_performance_summary()
+            )
+            stats["convergence_analysis"] = (
+                self.metrics_collector.get_convergence_analysis()
+            )
 
         return stats
 
     def save_checkpoint(self, checkpoint_path: str) -> None:
         """Save evolution checkpoint.
-        
+
         Args:
             checkpoint_path: Path to save checkpoint
         """
@@ -213,24 +238,26 @@ class MindEvolution:
         from pathlib import Path
 
         checkpoint_data = {
-            'generation': self.island_model.generation,
-            'config': self.config.model_dump(),
-            'global_best': self.island_model.global_best.model_dump() if self.island_model.global_best else None,
-            'population_statistics': self.island_model.get_population_statistics(),
-            'timestamp': time.time(),
+            "generation": self.island_model.generation,
+            "config": self.config.model_dump(),
+            "global_best": self.island_model.global_best.model_dump()
+            if self.island_model.global_best
+            else None,
+            "population_statistics": self.island_model.get_population_statistics(),
+            "timestamp": time.time(),
         }
 
         checkpoint_path = Path(checkpoint_path)
         checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(checkpoint_path, 'w') as f:
+        with open(checkpoint_path, "w") as f:
             json.dump(checkpoint_data, f, indent=2, default=str)
 
         logger.info(f"Checkpoint saved to {checkpoint_path}")
 
     def load_checkpoint(self, checkpoint_path: str) -> None:
         """Load evolution checkpoint.
-        
+
         Args:
             checkpoint_path: Path to checkpoint file
         """
@@ -245,18 +272,18 @@ class MindEvolution:
             checkpoint_data = json.load(f)
 
         # Restore generation counter
-        self.island_model.generation = checkpoint_data['generation']
+        self.island_model.generation = checkpoint_data["generation"]
 
         # Restore global best if available
-        if checkpoint_data.get('global_best'):
-            self.island_model.global_best = Solution(**checkpoint_data['global_best'])
+        if checkpoint_data.get("global_best"):
+            self.island_model.global_best = Solution(**checkpoint_data["global_best"])
 
         logger.info(f"Checkpoint loaded from {checkpoint_path}")
         logger.info(f"Resuming from generation {self.island_model.generation}")
 
     def export_results(self, output_path: str, format: str = "json") -> None:
         """Export evolution results.
-        
+
         Args:
             output_path: Output file path
             format: Export format (json, csv)
@@ -270,7 +297,7 @@ class MindEvolution:
             output_path = Path(output_path)
             output_path.parent.mkdir(parents=True, exist_ok=True)
 
-            with open(output_path, 'w') as f:
+            with open(output_path, "w") as f:
                 json.dump(results, f, indent=2, default=str)
 
         elif format.lower() == "csv":
@@ -287,7 +314,7 @@ class MindEvolution:
 
     def run_analysis(self) -> dict:
         """Run post-evolution analysis.
-        
+
         Returns:
             Analysis results dictionary
         """
@@ -295,26 +322,27 @@ class MindEvolution:
 
         # Convergence analysis
         if self.metrics_collector:
-            analysis['convergence'] = self.metrics_collector.get_convergence_analysis()
+            analysis["convergence"] = self.metrics_collector.get_convergence_analysis()
 
         # Population diversity analysis
         population_stats = self.island_model.get_population_statistics()
-        analysis['population_diversity'] = {}
+        analysis["population_diversity"] = {}
 
         for island_id, stats in population_stats.items():
-            analysis['population_diversity'][island_id] = {
-                'score_variance': stats.get('std_score', 0.0),
-                'score_range': stats.get('max_score', 0.0) - stats.get('min_score', 0.0),
+            analysis["population_diversity"][island_id] = {
+                "score_variance": stats.get("std_score", 0.0),
+                "score_range": stats.get("max_score", 0.0)
+                - stats.get("min_score", 0.0),
             }
 
         # Solution quality distribution
         best_solutions = self.island_model.get_best_solutions(50)
         if best_solutions:
             scores = [s.score for s in best_solutions]
-            analysis['solution_quality'] = {
-                'top_10_avg': sum(scores[:10]) / min(10, len(scores)),
-                'top_50_avg': sum(scores) / len(scores),
-                'score_spread': max(scores) - min(scores) if scores else 0,
+            analysis["solution_quality"] = {
+                "top_10_avg": sum(scores[:10]) / min(10, len(scores)),
+                "top_50_avg": sum(scores) / len(scores),
+                "score_spread": max(scores) - min(scores) if scores else 0,
             }
 
         return analysis

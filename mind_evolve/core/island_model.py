@@ -19,13 +19,15 @@ from .selection import BoltzmannTournamentSelection
 class IslandModel:
     """Manages multiple islands with independent evolution and migration."""
 
-    def __init__(self,
-                 config: MindEvolutionConfig,
-                 llm: BaseLLM,
-                 evaluator: BaseEvaluator,
-                 prompt_manager: PromptManager):
+    def __init__(
+        self,
+        config: MindEvolutionConfig,
+        llm: BaseLLM,
+        evaluator: BaseEvaluator,
+        prompt_manager: PromptManager,
+    ):
         """Initialize island model.
-        
+
         Args:
             config: Mind Evolution configuration
             llm: LLM interface
@@ -55,7 +57,7 @@ class IslandModel:
 
     def initialize_populations(self, problem) -> None:
         """Initialize all island populations.
-        
+
         Args:
             problem: Problem to solve
         """
@@ -67,7 +69,7 @@ class IslandModel:
                 island_id=island.island_id,
                 num_conversations=self.config.N_convs,
                 num_refinement_turns=self.config.N_seq,
-                temperature=self.config.temperature
+                temperature=self.config.temperature,
             )
 
             # Add solutions to island population
@@ -78,14 +80,16 @@ class IslandModel:
             if island.best_solution:
                 self._update_global_best(island.best_solution)
 
-        logger.info(f"Initialized populations with {sum(len(island) for island in self.islands)} solutions")
+        logger.info(
+            f"Initialized populations with {sum(len(island) for island in self.islands)} solutions"
+        )
 
     def evolve_generation(self, problem) -> dict[int, dict[str, float]]:
         """Evolve all islands for one generation.
-        
+
         Args:
             problem: Problem to solve
-            
+
         Returns:
             Dictionary of island statistics
         """
@@ -102,9 +106,9 @@ class IslandModel:
 
             stats_after = island.calculate_statistics()
             island_stats[island.island_id] = {
-                'before': stats_before.model_dump(),
-                'after': stats_after.model_dump(),
-                'improvement': stats_after.max_score - stats_before.max_score
+                "before": stats_before.model_dump(),
+                "after": stats_after.model_dump(),
+                "improvement": stats_after.max_score - stats_before.max_score,
             }
 
             # Update global best
@@ -115,7 +119,7 @@ class IslandModel:
 
     def _evolve_island(self, island: Population, problem) -> None:
         """Evolve a single island for one generation.
-        
+
         Args:
             island: Population to evolve
             problem: Problem to solve
@@ -136,20 +140,21 @@ class IslandModel:
                 selection_pool=selection_pool,
                 num_parents=num_parents,
                 config={
-                    'Pr_no_parents': self.config.Pr_no_parents,
-                    'temperature': self.config.temperature
-                }
+                    "Pr_no_parents": self.config.Pr_no_parents,
+                    "temperature": self.config.temperature,
+                },
             )
 
             # Create conversation thread
             from .models import ConversationThread
+
             conversation = ConversationThread(
                 id=conversation_id,
                 island_id=island.island_id,
                 generation=self.generation,
                 parent_solutions=parents,
                 children=[],
-                turns=[]
+                turns=[],
             )
 
             # Generate initial child solution
@@ -164,7 +169,7 @@ class IslandModel:
                     conversation=conversation,
                     turn=1,
                     temperature=self.config.temperature,
-                    enable_critic=self.config.enable_critic
+                    enable_critic=self.config.enable_critic,
                 )
 
             island.add_solution(initial_child)
@@ -178,7 +183,7 @@ class IslandModel:
                     conversation=conversation,
                     turn=turn,
                     temperature=self.config.temperature,
-                    enable_critic=self.config.enable_critic
+                    enable_critic=self.config.enable_critic,
                 )
 
                 island.add_solution(refined_solution)
@@ -186,23 +191,23 @@ class IslandModel:
 
     def _generate_initial_solution(self, problem, conversation):
         """Generate initial solution when no parents are selected.
-        
+
         Args:
             problem: Problem to solve
             conversation: Conversation context
-            
-        Returns:    
+
+        Returns:
             Generated initial solution
         """
         return self.initializer._generate_initial_solution(
             problem=problem,
             conversation=conversation,
-            temperature=self.config.temperature
+            temperature=self.config.temperature,
         )
 
     def perform_migration(self) -> dict[str, float]:
         """Perform migration between islands.
-        
+
         Returns:
             Migration statistics
         """
@@ -210,7 +215,7 @@ class IslandModel:
 
     def perform_island_reset(self) -> list[int]:
         """Perform island reset operation.
-        
+
         Returns:
             List of islands that were reset
         """
@@ -236,7 +241,7 @@ class IslandModel:
 
         # Sort and get top candidates
         all_solutions.sort(key=lambda s: s.score, reverse=True)
-        elite_candidates = all_solutions[:self.config.N_candidate]
+        elite_candidates = all_solutions[: self.config.N_candidate]
 
         # Select diverse elites
         if self.config.use_llm_for_reset and len(elite_candidates) > self.config.N_top:
@@ -244,7 +249,7 @@ class IslandModel:
                 elite_candidates, self.config.N_top
             )
         else:
-            selected_elites = elite_candidates[:self.config.N_top]
+            selected_elites = elite_candidates[: self.config.N_top]
 
         # Reset selected islands
         for island_id in reset_islands:
@@ -261,30 +266,29 @@ class IslandModel:
         logger.info(f"Reset islands {reset_islands} with {len(selected_elites)} elites")
         return reset_islands
 
-    def _select_diverse_elites_with_llm(self, candidates: list[Solution],
-                                      num_to_select: int) -> list[Solution]:
+    def _select_diverse_elites_with_llm(
+        self, candidates: list[Solution], num_to_select: int
+    ) -> list[Solution]:
         """Use LLM to select diverse elite solutions.
-        
+
         Args:
             candidates: Candidate elite solutions
             num_to_select: Number of solutions to select
-            
+
         Returns:
             Selected diverse elite solutions
         """
         try:
             selection_prompt = self.prompt_manager.create_elite_selection_prompt(
-                candidates=candidates,
-                num_to_select=num_to_select
+                candidates=candidates, num_to_select=num_to_select
             )
 
-            llm_response = self.llm.generate(
-                prompt=selection_prompt,
-                temperature=0.5
-            )
+            llm_response = self.llm.generate(prompt=selection_prompt, temperature=0.5)
 
             # Parse selection response
-            selected_indices = self._parse_selection_response(llm_response, len(candidates))
+            selected_indices = self._parse_selection_response(
+                llm_response, len(candidates)
+            )
             selected = [candidates[i] for i in selected_indices if i < len(candidates)]
 
             # Fallback if parsing failed
@@ -300,11 +304,11 @@ class IslandModel:
 
     def _parse_selection_response(self, response: str, max_index: int) -> list[int]:
         """Parse LLM selection response to extract indices.
-        
+
         Args:
             response: LLM response
             max_index: Maximum valid index
-            
+
         Returns:
             List of selected indices
         """
@@ -312,8 +316,8 @@ class IslandModel:
 
         # Look for list-like patterns
         patterns = [
-            r'\[([0-9,\s]+)\]',  # [1, 2, 3]
-            r'([0-9]+(?:,\s*[0-9]+)*)',  # 1, 2, 3
+            r"\[([0-9,\s]+)\]",  # [1, 2, 3]
+            r"([0-9]+(?:,\s*[0-9]+)*)",  # 1, 2, 3
         ]
 
         for pattern in patterns:
@@ -321,7 +325,7 @@ class IslandModel:
             if match:
                 try:
                     indices_str = match.group(1)
-                    indices = [int(x.strip()) for x in indices_str.split(',')]
+                    indices = [int(x.strip()) for x in indices_str.split(",")]
                     # Filter valid indices
                     valid_indices = [i for i in indices if 0 <= i < max_index]
                     if valid_indices:
@@ -330,22 +334,23 @@ class IslandModel:
                     continue
 
         # Fallback: look for individual numbers
-        numbers = re.findall(r'\b([0-9]+)\b', response)
+        numbers = re.findall(r"\b([0-9]+)\b", response)
         try:
             indices = [int(num) for num in numbers]
             return [i for i in indices if 0 <= i < max_index]
         except ValueError:
             return []
 
-    def _clone_solution_for_reset(self, solution: Solution,
-                                target_island_id: int, generation: int) -> Solution:
+    def _clone_solution_for_reset(
+        self, solution: Solution, target_island_id: int, generation: int
+    ) -> Solution:
         """Clone solution for island reset.
-        
+
         Args:
             solution: Solution to clone
             target_island_id: Target island ID
             generation: Current generation
-            
+
         Returns:
             Cloned solution
         """
@@ -363,27 +368,29 @@ class IslandModel:
             parent_ids=solution.parent_ids.copy(),
             metadata={
                 **solution.metadata,
-                'reset_elite': True,
-                'original_island': solution.island_id,
-                'original_id': solution.id,
+                "reset_elite": True,
+                "original_island": solution.island_id,
+                "original_id": solution.id,
             },
-            timestamp=datetime.now()
+            timestamp=datetime.now(),
         )
 
     def _update_global_best(self, solution: Solution) -> None:
         """Update global best solution.
-        
+
         Args:
             solution: Candidate best solution
         """
         if self.global_best is None or solution.score > self.global_best.score:
             self.global_best = solution
-            logger.debug(f"New global best: {solution.score:.3f} "
-                        f"from island {solution.island_id}")
+            logger.debug(
+                f"New global best: {solution.score:.3f} "
+                f"from island {solution.island_id}"
+            )
 
     def get_population_statistics(self) -> dict[int, dict[str, float]]:
         """Get statistics for all island populations.
-        
+
         Returns:
             Dictionary mapping island_id to statistics
         """
@@ -395,10 +402,10 @@ class IslandModel:
 
     def get_best_solutions(self, n: int = 10) -> list[Solution]:
         """Get top N solutions across all islands.
-        
+
         Args:
             n: Number of solutions to return
-            
+
         Returns:
             List of best solutions
         """
@@ -411,7 +418,7 @@ class IslandModel:
 
     def has_valid_solution(self) -> bool:
         """Check if any island has a valid solution.
-        
+
         Returns:
             True if valid solution exists
         """
