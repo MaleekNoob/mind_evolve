@@ -253,16 +253,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🔗 Links
 
-- [Documentation](https://mind-evolve.readthedocs.io/)
-- [Paper](https://arxiv.org/abs/xxxx.xxxxx)
+- [Documentation]([https://mind-evolve.readthedocs.io/](https://github.com/MaleekNoob/mind_evolve))
+- [Paper](https://arxiv.org/abs/2501.09891)
 - [Examples](examples/)
 - [API Reference](docs/api.md)
 
 ## 📧 Contact
 
-Research Team - research@example.com
+Research Team - [maleekhussainalii@gmail.com](maleekhussainalii@gmail.com)
 
-Project Link: [https://github.com/your-org/mind-evolve](https://github.com/your-org/mind-evolve)
+Project Link: [https://github.com/your-org/mind-evolve](https://github.com/MaleekNoob/mind_evolve)
 
 ## 🙏 Acknowledgments
 
