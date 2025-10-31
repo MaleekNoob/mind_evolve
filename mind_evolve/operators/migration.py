@@ -1,7 +1,6 @@
 """Migration operators for inter-island solution transfer."""
 
 import uuid
-from typing import Dict, List
 
 from loguru import logger
 
@@ -11,7 +10,7 @@ from ..core.population import Population
 
 class MigrationOperator:
     """Handles migration of solutions between islands."""
-    
+
     def __init__(self, migration_rate: int = 5):
         """Initialize migration operator.
         
@@ -19,11 +18,11 @@ class MigrationOperator:
             migration_rate: Number of solutions to migrate per operation
         """
         self.migration_rate = migration_rate
-        
+
     def migrate_solutions(self,
                          source_population: Population,
                          target_population: Population,
-                         num_migrants: int = None) -> List[Solution]:
+                         num_migrants: int = None) -> list[Solution]:
         """Migrate solutions from source to target population.
         
         Args:
@@ -36,15 +35,15 @@ class MigrationOperator:
         """
         if num_migrants is None:
             num_migrants = self.migration_rate
-            
+
         # Get top solutions from source population
         emigrants = source_population.get_top_solutions(num_migrants)
-        
+
         if not emigrants:
             logger.debug(f"No solutions available for migration from island "
                         f"{source_population.island_id}")
             return []
-            
+
         # Clone solutions for target population
         migrants = []
         for solution in emigrants:
@@ -53,16 +52,16 @@ class MigrationOperator:
                 target_island_id=target_population.island_id,
                 source_island_id=source_population.island_id
             )
-            
+
             target_population.add_solution(migrant)
             migrants.append(migrant)
-            
+
         logger.debug(f"Migrated {len(migrants)} solutions from island "
                     f"{source_population.island_id} to island "
                     f"{target_population.island_id}")
-        
+
         return migrants
-        
+
     def _clone_solution_for_migration(self,
                                     solution: Solution,
                                     target_island_id: int,
@@ -78,7 +77,7 @@ class MigrationOperator:
             Cloned solution with updated metadata
         """
         from datetime import datetime
-        
+
         # Create new solution with updated metadata
         migrant = Solution(
             id=str(uuid.uuid4()),  # New ID for the migrant
@@ -99,10 +98,10 @@ class MigrationOperator:
             },
             timestamp=datetime.now()
         )
-        
+
         return migrant
-        
-    def ring_migration(self, populations: List[Population]) -> Dict[int, List[Solution]]:
+
+    def ring_migration(self, populations: list[Population]) -> dict[int, list[Solution]]:
         """Perform ring migration between populations.
         
         Args:
@@ -112,20 +111,20 @@ class MigrationOperator:
             Dictionary mapping island_id to list of received migrants
         """
         migration_results = {}
-        
+
         for i, source_pop in enumerate(populations):
             target_idx = (i + 1) % len(populations)
             target_pop = populations[target_idx]
-            
+
             migrants = self.migrate_solutions(source_pop, target_pop)
             migration_results[target_pop.island_id] = migrants
-            
+
         logger.info(f"Completed ring migration across {len(populations)} islands")
         return migration_results
-        
+
     def tournament_migration(self,
-                           populations: List[Population],
-                           tournament_size: int = 3) -> Dict[int, List[Solution]]:
+                           populations: list[Population],
+                           tournament_size: int = 3) -> dict[int, list[Solution]]:
         """Perform tournament-based migration.
         
         Args:
@@ -136,30 +135,30 @@ class MigrationOperator:
             Dictionary mapping island_id to list of received migrants
         """
         import random
-        
+
         migration_results = {}
-        
+
         for target_pop in populations:
             # Select random populations for tournament
             tournament_pops = random.sample(
                 [p for p in populations if p.island_id != target_pop.island_id],
                 min(tournament_size, len(populations) - 1)
             )
-            
+
             # Find best population in tournament (by best solution score)
-            best_pop = max(tournament_pops, 
+            best_pop = max(tournament_pops,
                           key=lambda p: p.best_solution.score if p.best_solution else 0)
-            
+
             # Migrate from best population
             migrants = self.migrate_solutions(best_pop, target_pop)
             migration_results[target_pop.island_id] = migrants
-            
+
         logger.info(f"Completed tournament migration with tournament size {tournament_size}")
         return migration_results
-        
+
     def adaptive_migration(self,
-                          populations: List[Population],
-                          diversity_threshold: float = 0.5) -> Dict[int, List[Solution]]:
+                          populations: list[Population],
+                          diversity_threshold: float = 0.5) -> dict[int, list[Solution]]:
         """Perform adaptive migration based on population diversity.
         
         Args:
@@ -170,32 +169,32 @@ class MigrationOperator:
             Dictionary mapping island_id to list of received migrants
         """
         migration_results = {}
-        
+
         # Calculate diversity for each population
         population_diversities = []
         for pop in populations:
             diversity = pop.get_diversity_score()
             population_diversities.append((pop, diversity))
-            
+
         # Sort by diversity (lowest first)
         population_diversities.sort(key=lambda x: x[1])
-        
+
         # Migrate to populations with low diversity
         for pop, diversity in population_diversities:
             if diversity < diversity_threshold:
                 # Find most diverse population as source
                 source_pop = max(population_diversities, key=lambda x: x[1])[0]
-                
+
                 if source_pop.island_id != pop.island_id:
                     migrants = self.migrate_solutions(source_pop, pop)
                     migration_results[pop.island_id] = migrants
-                    
+
         logger.info(f"Completed adaptive migration for {len(migration_results)} islands")
         return migration_results
-        
+
     def elitist_migration(self,
-                         populations: List[Population],
-                         elite_ratio: float = 0.1) -> Dict[int, List[Solution]]:
+                         populations: list[Population],
+                         elite_ratio: float = 0.1) -> dict[int, list[Solution]]:
         """Perform elitist migration sharing best solutions globally.
         
         Args:
@@ -209,21 +208,21 @@ class MigrationOperator:
         all_solutions = []
         for pop in populations:
             all_solutions.extend(pop.get_selection_pool())
-            
+
         if not all_solutions:
             return {}
-            
+
         # Sort by score and get global elites
         all_solutions.sort(key=lambda s: s.score, reverse=True)
         num_elites = max(1, int(len(all_solutions) * elite_ratio))
         global_elites = all_solutions[:num_elites]
-        
+
         migration_results = {}
-        
+
         # Distribute elites to all populations
         for pop in populations:
             migrants = []
-            
+
             for elite in global_elites:
                 # Don't migrate solution to its own island
                 if elite.island_id != pop.island_id:
@@ -232,21 +231,21 @@ class MigrationOperator:
                         target_island_id=pop.island_id,
                         source_island_id=elite.island_id
                     )
-                    
+
                     # Add elite marker
                     migrant.metadata['elite_migration'] = True
                     migrant.metadata['global_rank'] = global_elites.index(elite) + 1
-                    
+
                     pop.add_solution(migrant)
                     migrants.append(migrant)
-                    
+
             migration_results[pop.island_id] = migrants
-            
+
         logger.info(f"Completed elitist migration distributing {num_elites} elites")
         return migration_results
-        
-    def get_migration_statistics(self, 
-                               migration_results: Dict[int, List[Solution]]) -> Dict[str, float]:
+
+    def get_migration_statistics(self,
+                               migration_results: dict[int, list[Solution]]) -> dict[str, float]:
         """Calculate statistics for migration operation.
         
         Args:
@@ -257,17 +256,17 @@ class MigrationOperator:
         """
         if not migration_results:
             return {}
-            
+
         total_migrants = sum(len(migrants) for migrants in migration_results.values())
         receiving_islands = len(migration_results)
-        
+
         # Calculate average scores of migrants
         all_migrant_scores = []
         for migrants in migration_results.values():
             all_migrant_scores.extend([m.score for m in migrants])
-            
+
         avg_migrant_score = sum(all_migrant_scores) / len(all_migrant_scores) if all_migrant_scores else 0
-        
+
         return {
             'total_migrants': total_migrants,
             'receiving_islands': receiving_islands,

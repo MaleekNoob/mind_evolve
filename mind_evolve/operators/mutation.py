@@ -2,7 +2,6 @@
 
 import uuid
 from datetime import datetime
-from typing import List, Optional
 
 from loguru import logger
 
@@ -14,7 +13,7 @@ from ..llm.prompt_manager import PromptManager
 
 class MutationOperator:
     """Handles mutation operations on solutions."""
-    
+
     def __init__(self,
                  llm: BaseLLM,
                  evaluator: BaseEvaluator,
@@ -29,7 +28,7 @@ class MutationOperator:
         self.llm = llm
         self.evaluator = evaluator
         self.prompt_manager = prompt_manager
-        
+
     def mutate(self,
                problem: Problem,
                solution: Solution,
@@ -54,10 +53,10 @@ class MutationOperator:
         """
         logger.debug(f"Mutating solution {solution.id[:8]} "
                     f"with strength {mutation_strength}")
-        
+
         # Adjust temperature based on mutation strength
         mutation_temperature = temperature * (1.0 + mutation_strength)
-        
+
         # Generate critic analysis if enabled
         critic_response = ""
         if enable_critic:
@@ -66,7 +65,7 @@ class MutationOperator:
                 solution=solution,
                 temperature=mutation_temperature * 0.8
             )
-            
+
         # Generate mutated solution
         mutated_solution = self._generate_mutated_solution(
             problem=problem,
@@ -77,12 +76,12 @@ class MutationOperator:
             temperature=mutation_temperature,
             mutation_strength=mutation_strength
         )
-        
+
         logger.debug(f"Mutation produced solution {mutated_solution.id[:8]} "
                     f"with score {mutated_solution.score:.3f}")
-        
+
         return mutated_solution
-        
+
     def _generate_mutation_critique(self,
                                   problem: Problem,
                                   solution: Solution,
@@ -102,12 +101,12 @@ class MutationOperator:
             solution=solution,
             feedback=solution.feedback
         )
-        
+
         return self.llm.generate(
             prompt=critic_prompt,
             temperature=temperature
         )
-        
+
     def _generate_mutated_solution(self,
                                  problem: Problem,
                                  original_solution: Solution,
@@ -137,19 +136,19 @@ class MutationOperator:
             critic_analysis=critic_analysis,
             mutation_strength=mutation_strength
         )
-        
+
         # Generate mutated solution
         author_response = self.llm.generate(
             prompt=mutation_prompt,
             temperature=temperature
         )
-        
+
         # Parse solution content
         solution_content = self._parse_solution_content(author_response)
-        
+
         # Evaluate mutated solution
         evaluation = self.evaluator.evaluate(solution_content, problem)
-        
+
         # Create mutated solution object
         mutated_solution = Solution(
             id=str(uuid.uuid4()),
@@ -170,9 +169,9 @@ class MutationOperator:
             },
             timestamp=datetime.now()
         )
-        
+
         return mutated_solution
-        
+
     def _create_mutation_prompt(self,
                               problem: Problem,
                               solution: Solution,
@@ -195,7 +194,7 @@ class MutationOperator:
             mutation_instruction = "Make MODERATE changes to significantly improve the solution."
         else:
             mutation_instruction = "Make MAJOR changes or try a completely different approach."
-            
+
         # Use the author prompt as base and add mutation-specific instructions
         base_prompt = self.prompt_manager.create_author_prompt(
             problem=problem,
@@ -203,7 +202,7 @@ class MutationOperator:
             feedback=solution.feedback,
             critic_analysis=critic_analysis
         )
-        
+
         mutation_prompt = f"""{base_prompt}
 
 MUTATION INSTRUCTIONS:
@@ -214,9 +213,9 @@ Mutation Strength: {mutation_strength:.1f} (0.0 = minimal change, 1.0 = maximum 
 Focus on creating a meaningfully different solution while addressing the identified issues.
 
 Generate your mutated solution now:"""
-        
+
         return mutation_prompt
-        
+
     def _parse_solution_content(self, llm_response: str) -> str:
         """Parse solution content from LLM response.
         
@@ -227,7 +226,7 @@ Generate your mutated solution now:"""
             Cleaned solution content
         """
         content = llm_response.strip()
-        
+
         # Remove common prefixes
         prefixes_to_remove = [
             "Here's my mutated solution:",
@@ -238,14 +237,14 @@ Generate your mutated solution now:"""
             "Modified solution:",
             "Solution:",
         ]
-        
+
         for prefix in prefixes_to_remove:
             if content.lower().startswith(prefix.lower()):
                 content = content[len(prefix):].strip()
                 break
-                
+
         return content
-        
+
     def random_mutation(self,
                        problem: Problem,
                        solution: Solution,
@@ -261,42 +260,42 @@ Generate your mutated solution now:"""
             Randomly mutated solution content
         """
         import random
-        
+
         words = solution.content.split()
         if not words:
             return solution.content
-            
+
         mutated_words = words.copy()
-        
+
         for _ in range(min(num_changes, len(words) // 4)):
             mutation_type = random.choice(['replace', 'insert', 'delete', 'swap'])
-            
+
             if mutation_type == 'replace' and len(words) > 0:
                 idx = random.randint(0, len(mutated_words) - 1)
                 # Replace with a similar word (simplified)
                 synonyms = ['improved', 'enhanced', 'better', 'optimized', 'refined']
                 mutated_words[idx] = random.choice(synonyms)
-                
+
             elif mutation_type == 'insert':
                 idx = random.randint(0, len(mutated_words))
                 insertions = ['additionally', 'furthermore', 'moreover', 'also']
                 mutated_words.insert(idx, random.choice(insertions))
-                
+
             elif mutation_type == 'delete' and len(mutated_words) > 5:
                 idx = random.randint(0, len(mutated_words) - 1)
                 mutated_words.pop(idx)
-                
+
             elif mutation_type == 'swap' and len(mutated_words) > 1:
                 idx1 = random.randint(0, len(mutated_words) - 1)
                 idx2 = random.randint(0, len(mutated_words) - 1)
                 mutated_words[idx1], mutated_words[idx2] = mutated_words[idx2], mutated_words[idx1]
-                
+
         return ' '.join(mutated_words)
-        
+
     def guided_mutation(self,
                        problem: Problem,
                        solution: Solution,
-                       feedback_focus: Optional[List[str]] = None,
+                       feedback_focus: list[str] | None = None,
                        temperature: float = 1.0) -> Solution:
         """Perform guided mutation based on specific feedback.
         
@@ -318,7 +317,7 @@ Generate your mutated solution now:"""
             children=[],
             turns=[]
         )
-        
+
         # Create focused feedback if provided
         if feedback_focus:
             focused_solution = Solution(
@@ -327,7 +326,7 @@ Generate your mutated solution now:"""
             )
         else:
             focused_solution = solution
-            
+
         return self.mutate(
             problem=problem,
             solution=focused_solution,
@@ -336,7 +335,7 @@ Generate your mutated solution now:"""
             mutation_strength=0.5,
             enable_critic=True
         )
-        
+
     def adaptive_mutation(self,
                          problem: Problem,
                          solution: Solution,
@@ -362,7 +361,7 @@ Generate your mutated solution now:"""
             mutation_strength = 0.5  # Moderate
         else:
             mutation_strength = 0.3  # Low, focus on exploitation
-            
+
         # Create conversation context
         conversation = ConversationThread(
             id=f"adaptive_mutation_{uuid.uuid4().hex[:8]}",
@@ -372,7 +371,7 @@ Generate your mutated solution now:"""
             children=[],
             turns=[]
         )
-        
+
         return self.mutate(
             problem=problem,
             solution=solution,

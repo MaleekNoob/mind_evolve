@@ -7,7 +7,7 @@ from .mutation import MutationOperator
 
 __all__ = [
     "PopulationInitializer",
-    "CrossoverOperator", 
+    "CrossoverOperator",
     "MutationOperator",
     "MigrationOperator",
 ]

@@ -5,39 +5,39 @@ problem-solving by using evolutionary search strategies during inference time.
 """
 
 __version__ = "0.1.0"
-__author__ = "Research Team"
-__email__ = "research@example.com"
+__author__ = "Maleek"
+__email__ = "maleekhussainalii@gmail.com"
 
 from .core import (
     MindEvolutionConfig,
+    Population,
     Problem,
     Solution,
-    Population,
 )
 from .core.evolutionary_engine import MindEvolution
 from .core.island_model import IslandModel
 from .evaluation import BaseEvaluator, create_evaluator
-from .llm import BaseLLM, create_llm, PromptManager
+from .llm import BaseLLM, PromptManager, create_llm
 from .utils import ConfigManager, setup_logging
 
 __all__ = [
     # Core classes
     "MindEvolution",
-    "IslandModel", 
+    "IslandModel",
     "MindEvolutionConfig",
     "Problem",
     "Solution",
     "Population",
-    
+
     # LLM interface
     "BaseLLM",
     "create_llm",
     "PromptManager",
-    
+
     # Evaluation
-    "BaseEvaluator", 
+    "BaseEvaluator",
     "create_evaluator",
-    
+
     # Utilities
     "ConfigManager",
     "setup_logging",

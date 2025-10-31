@@ -24,19 +24,19 @@ __all__ = [
     # Main classes
     "MindEvolution",
     "IslandModel",
-    
+
     # Models
     "Solution",
     "ConversationTurn",
-    "ConversationThread", 
+    "ConversationThread",
     "EvaluationResult",
     "Problem",
     "MindEvolutionConfig",
     "PopulationStats",
-    
+
     # Population
     "Population",
-    
+
     # Selection
     "SelectionStrategy",
     "BoltzmannTournamentSelection",

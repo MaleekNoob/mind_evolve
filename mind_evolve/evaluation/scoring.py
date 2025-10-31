@@ -1,7 +1,6 @@
 """Scoring utilities for solution evaluation."""
 
-import math
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import numpy as np
 
@@ -10,7 +9,7 @@ from ..core.models import Solution
 
 class ScoringFunction:
     """Base class for scoring functions."""
-    
+
     def __init__(self, name: str, weight: float = 1.0):
         """Initialize scoring function.
         
@@ -20,7 +19,7 @@ class ScoringFunction:
         """
         self.name = name
         self.weight = weight
-        
+
     def score(self, solution_content: str, **kwargs: Any) -> float:
         """Calculate score for solution content.
         
@@ -32,13 +31,13 @@ class ScoringFunction:
             Score value
         """
         raise NotImplementedError
-        
+
 
 class LengthBasedScoring(ScoringFunction):
     """Scoring based on solution length."""
-    
-    def __init__(self, 
-                 target_length: int = 200, 
+
+    def __init__(self,
+                 target_length: int = 200,
                  min_length: int = 50,
                  max_length: int = 1000,
                  **kwargs: Any):
@@ -54,7 +53,7 @@ class LengthBasedScoring(ScoringFunction):
         self.target_length = target_length
         self.min_length = min_length
         self.max_length = max_length
-        
+
     def score(self, solution_content: str, **kwargs: Any) -> float:
         """Score based on length proximity to target.
         
@@ -66,7 +65,7 @@ class LengthBasedScoring(ScoringFunction):
             Score between 0 and 10
         """
         length = len(solution_content.strip())
-        
+
         if length < self.min_length:
             # Penalty for too short
             return 2.0 * (length / self.min_length)
@@ -82,11 +81,11 @@ class LengthBasedScoring(ScoringFunction):
 
 class StructureBasedScoring(ScoringFunction):
     """Scoring based on solution structure."""
-    
+
     def __init__(self, **kwargs: Any):
         """Initialize structure-based scoring."""
         super().__init__("structure_based", **kwargs)
-        
+
     def score(self, solution_content: str, **kwargs: Any) -> float:
         """Score based on solution structure quality.
         
@@ -99,33 +98,33 @@ class StructureBasedScoring(ScoringFunction):
         """
         lines = solution_content.strip().split('\n')
         score = 5.0  # Base score
-        
+
         # Reward multi-line structure
         if len(lines) > 1:
             score += 1.0
-            
+
         # Reward lists or numbered items
-        structured_lines = sum(1 for line in lines 
+        structured_lines = sum(1 for line in lines
                              if line.strip().startswith(('-', '*', '1.', '2.', '3.')))
         if structured_lines > 0:
             score += min(2.0, structured_lines * 0.5)
-            
+
         # Reward paragraph structure
         if '\n\n' in solution_content:
             score += 1.0
-            
+
         # Check for section headers (lines ending with ':')
         headers = sum(1 for line in lines if line.strip().endswith(':'))
         if headers > 0:
             score += min(1.0, headers * 0.3)
-            
+
         return min(10.0, score)
 
 
 class KeywordBasedScoring(ScoringFunction):
     """Scoring based on keyword presence."""
-    
-    def __init__(self, keywords: List[str], **kwargs: Any):
+
+    def __init__(self, keywords: list[str], **kwargs: Any):
         """Initialize keyword-based scoring.
         
         Args:
@@ -134,7 +133,7 @@ class KeywordBasedScoring(ScoringFunction):
         """
         super().__init__("keyword_based", **kwargs)
         self.keywords = [kw.lower() for kw in keywords]
-        
+
     def score(self, solution_content: str, **kwargs: Any) -> float:
         """Score based on keyword coverage.
         
@@ -147,26 +146,26 @@ class KeywordBasedScoring(ScoringFunction):
         """
         if not self.keywords:
             return 5.0
-            
+
         content_lower = solution_content.lower()
         found_keywords = sum(1 for kw in self.keywords if kw in content_lower)
-        
+
         coverage_ratio = found_keywords / len(self.keywords)
         return 3.0 + 7.0 * coverage_ratio
 
 
 class CompositeScorer:
     """Combines multiple scoring functions."""
-    
-    def __init__(self, scoring_functions: List[ScoringFunction]):
+
+    def __init__(self, scoring_functions: list[ScoringFunction]):
         """Initialize composite scorer.
         
         Args:
             scoring_functions: List of scoring functions to combine
         """
         self.scoring_functions = scoring_functions
-        
-    def calculate_score(self, solution_content: str, **kwargs: Any) -> Dict[str, float]:
+
+    def calculate_score(self, solution_content: str, **kwargs: Any) -> dict[str, float]:
         """Calculate composite score.
         
         Args:
@@ -179,21 +178,21 @@ class CompositeScorer:
         scores = {}
         total_weight = 0.0
         weighted_sum = 0.0
-        
+
         for func in self.scoring_functions:
             individual_score = func.score(solution_content, **kwargs)
             scores[func.name] = individual_score
-            
+
             weighted_sum += individual_score * func.weight
             total_weight += func.weight
-            
+
         # Calculate final composite score
         composite_score = weighted_sum / max(total_weight, 1.0)
         scores['composite'] = composite_score
         scores['total_weight'] = total_weight
-        
+
         return scores
-        
+
     def add_scoring_function(self, scoring_function: ScoringFunction) -> None:
         """Add a new scoring function.
         
@@ -201,7 +200,7 @@ class CompositeScorer:
             scoring_function: Scoring function to add
         """
         self.scoring_functions.append(scoring_function)
-        
+
     def remove_scoring_function(self, name: str) -> bool:
         """Remove scoring function by name.
         
@@ -220,9 +219,9 @@ class CompositeScorer:
 
 class PopulationScorer:
     """Utilities for scoring populations of solutions."""
-    
+
     @staticmethod
-    def calculate_diversity_score(solutions: List[Solution]) -> float:
+    def calculate_diversity_score(solutions: list[Solution]) -> float:
         """Calculate diversity score for a population.
         
         Args:
@@ -233,18 +232,18 @@ class PopulationScorer:
         """
         if len(solutions) < 2:
             return 0.0
-            
+
         # Simple diversity metric based on content differences
         contents = [sol.content for sol in solutions]
         pairwise_distances = []
-        
+
         for i in range(len(contents)):
             for j in range(i + 1, len(contents)):
                 distance = PopulationScorer._calculate_text_distance(contents[i], contents[j])
                 pairwise_distances.append(distance)
-                
+
         return float(np.mean(pairwise_distances))
-        
+
     @staticmethod
     def _calculate_text_distance(text1: str, text2: str) -> float:
         """Calculate simple text distance between two strings.
@@ -259,20 +258,20 @@ class PopulationScorer:
         # Simple Jaccard distance based on word sets
         words1 = set(text1.lower().split())
         words2 = set(text2.lower().split())
-        
+
         if not words1 and not words2:
             return 0.0
         if not words1 or not words2:
             return 1.0
-            
+
         intersection = len(words1 & words2)
         union = len(words1 | words2)
-        
+
         return 1.0 - (intersection / union)
-        
+
     @staticmethod
-    def rank_solutions(solutions: List[Solution], 
-                      rank_by: str = "score") -> List[Solution]:
+    def rank_solutions(solutions: list[Solution],
+                      rank_by: str = "score") -> list[Solution]:
         """Rank solutions by specified criteria.
         
         Args:
@@ -290,9 +289,9 @@ class PopulationScorer:
             return sorted(solutions, key=lambda s: s.timestamp, reverse=True)
         else:
             raise ValueError(f"Unknown ranking criteria: {rank_by}")
-            
+
     @staticmethod
-    def calculate_population_stats(solutions: List[Solution]) -> Dict[str, float]:
+    def calculate_population_stats(solutions: list[Solution]) -> dict[str, float]:
         """Calculate statistics for a population of solutions.
         
         Args:
@@ -303,9 +302,9 @@ class PopulationScorer:
         """
         if not solutions:
             return {}
-            
+
         scores = [s.score for s in solutions]
-        
+
         return {
             "mean_score": float(np.mean(scores)),
             "median_score": float(np.median(scores)),

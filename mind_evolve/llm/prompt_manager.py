@@ -1,8 +1,8 @@
 """Prompt management system for Mind Evolution."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from jinja2 import Environment, BaseLoader, TemplateNotFound
+from jinja2 import BaseLoader, Environment
 from pydantic import BaseModel
 
 from ..core.models import Problem, Solution
@@ -10,16 +10,16 @@ from ..core.models import Problem, Solution
 
 class PromptTemplate(BaseModel):
     """Template for generating prompts."""
-    
+
     name: str
     template: str
     description: str = ""
-    required_variables: List[str] = []
-    
+    required_variables: list[str] = []
+
 
 class PromptManager:
     """Manages prompt templates and generation for Mind Evolution."""
-    
+
     def __init__(self, task_type: str = "general"):
         """Initialize prompt manager.
         
@@ -29,8 +29,8 @@ class PromptManager:
         self.task_type = task_type
         self.env = Environment(loader=BaseLoader())
         self.templates = self._load_default_templates()
-        
-    def _load_default_templates(self) -> Dict[str, PromptTemplate]:
+
+    def _load_default_templates(self) -> dict[str, PromptTemplate]:
         """Load default prompt templates."""
         return {
             "initial": PromptTemplate(
@@ -70,7 +70,7 @@ class PromptManager:
                 required_variables=["candidates", "num_to_select"]
             )
         }
-        
+
     def create_initial_prompt(self, problem: Problem) -> str:
         """Generate prompt for initial solution generation.
         
@@ -87,11 +87,11 @@ class PromptManager:
             constraints=self._format_constraints(problem.constraints),
             examples=self._format_examples(problem.examples)
         )
-        
-    def create_critic_prompt(self, 
-                           problem: Problem, 
+
+    def create_critic_prompt(self,
+                           problem: Problem,
                            solution: Solution,
-                           feedback: List[str]) -> str:
+                           feedback: list[str]) -> str:
         """Generate critic analysis prompt.
         
         Args:
@@ -111,11 +111,11 @@ class PromptManager:
             feedback_list=self._format_feedback(feedback),
             score=solution.score
         )
-        
-    def create_author_prompt(self, 
+
+    def create_author_prompt(self,
                            problem: Problem,
                            solution: Solution,
-                           feedback: List[str],
+                           feedback: list[str],
                            critic_analysis: str) -> str:
         """Generate author refinement prompt.
         
@@ -138,10 +138,10 @@ class PromptManager:
             critic_analysis=critic_analysis,
             score=solution.score
         )
-        
-    def create_multi_parent_critic_prompt(self, 
+
+    def create_multi_parent_critic_prompt(self,
                                         problem: Problem,
-                                        parents: List[Solution]) -> str:
+                                        parents: list[Solution]) -> str:
         """Generate critic prompt for multiple parents.
         
         Args:
@@ -159,10 +159,10 @@ class PromptManager:
             parents=parents,
             parent_summaries=self._format_parent_summaries(parents)
         )
-        
-    def create_multi_parent_author_prompt(self, 
+
+    def create_multi_parent_author_prompt(self,
                                         problem: Problem,
-                                        parents: List[Solution],
+                                        parents: list[Solution],
                                         critic_analysis: str) -> str:
         """Generate author prompt for crossover.
         
@@ -183,9 +183,9 @@ class PromptManager:
             parent_summaries=self._format_parent_summaries(parents),
             critic_analysis=critic_analysis
         )
-        
-    def create_elite_selection_prompt(self, 
-                                    candidates: List[Solution],
+
+    def create_elite_selection_prompt(self,
+                                    candidates: list[Solution],
                                     num_to_select: int) -> str:
         """Generate prompt for diverse elite selection.
         
@@ -202,32 +202,32 @@ class PromptManager:
             num_to_select=num_to_select,
             candidate_summaries=self._format_candidate_summaries(candidates)
         )
-        
-    def _format_constraints(self, constraints: List[str]) -> str:
+
+    def _format_constraints(self, constraints: list[str]) -> str:
         """Format constraints for prompt inclusion."""
         if not constraints:
             return "No specific constraints provided."
         return "\n".join(f"- {constraint}" for constraint in constraints)
-        
-    def _format_examples(self, examples: List[Dict[str, Any]]) -> str:
+
+    def _format_examples(self, examples: list[dict[str, Any]]) -> str:
         """Format examples for prompt inclusion."""
         if not examples:
             return "No examples provided."
-        
+
         formatted = []
         for i, example in enumerate(examples, 1):
             formatted.append(f"Example {i}:")
             for key, value in example.items():
                 formatted.append(f"  {key}: {value}")
         return "\n".join(formatted)
-        
-    def _format_feedback(self, feedback: List[str]) -> str:
+
+    def _format_feedback(self, feedback: list[str]) -> str:
         """Format feedback for prompt inclusion."""
         if not feedback:
             return "No specific feedback provided."
         return "\n".join(f"- {fb}" for fb in feedback)
-        
-    def _format_parent_summaries(self, parents: List[Solution]) -> str:
+
+    def _format_parent_summaries(self, parents: list[Solution]) -> str:
         """Format parent solution summaries."""
         summaries = []
         for i, parent in enumerate(parents, 1):
@@ -236,15 +236,15 @@ class PromptManager:
             if parent.feedback:
                 summaries.append(f"  Feedback: {'; '.join(parent.feedback[:2])}")
         return "\n".join(summaries)
-        
-    def _format_candidate_summaries(self, candidates: List[Solution]) -> str:
+
+    def _format_candidate_summaries(self, candidates: list[Solution]) -> str:
         """Format candidate solution summaries."""
         summaries = []
         for i, candidate in enumerate(candidates):
             summaries.append(f"Candidate {i} (ID: {candidate.id[:8]}, Score: {candidate.score:.2f}):")
             summaries.append(f"  Content: {candidate.content[:150]}...")
         return "\n".join(summaries)
-        
+
     # Template definitions
     def _get_initial_template(self) -> str:
         """Get initial solution generation template."""

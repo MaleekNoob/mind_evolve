@@ -2,7 +2,6 @@
 
 import uuid
 from datetime import datetime
-from typing import List
 
 from loguru import logger
 
@@ -14,7 +13,7 @@ from ..llm.prompt_manager import PromptManager
 
 class CrossoverOperator:
     """Handles crossover operations between parent solutions."""
-    
+
     def __init__(self,
                  llm: BaseLLM,
                  evaluator: BaseEvaluator,
@@ -29,10 +28,10 @@ class CrossoverOperator:
         self.llm = llm
         self.evaluator = evaluator
         self.prompt_manager = prompt_manager
-        
+
     def crossover(self,
                   problem: Problem,
-                  parents: List[Solution],
+                  parents: list[Solution],
                   conversation: ConversationThread,
                   turn: int = 1,
                   temperature: float = 1.0,
@@ -52,9 +51,9 @@ class CrossoverOperator:
         """
         if not parents:
             raise ValueError("Cannot perform crossover with no parents")
-            
+
         logger.debug(f"Performing crossover with {len(parents)} parents")
-        
+
         # Generate critic analysis if enabled
         critic_response = ""
         if enable_critic:
@@ -63,7 +62,7 @@ class CrossoverOperator:
                 parents=parents,
                 temperature=temperature * 0.8
             )
-            
+
         # Generate child solution through synthesis
         child_solution = self._synthesize_child_solution(
             problem=problem,
@@ -73,15 +72,15 @@ class CrossoverOperator:
             turn=turn,
             temperature=temperature
         )
-        
+
         logger.debug(f"Crossover produced child {child_solution.id[:8]} "
                     f"with score {child_solution.score:.3f}")
-        
+
         return child_solution
-        
+
     def _generate_multi_parent_critique(self,
                                       problem: Problem,
-                                      parents: List[Solution],
+                                      parents: list[Solution],
                                       temperature: float) -> str:
         """Generate critique analyzing multiple parent solutions.
         
@@ -97,15 +96,15 @@ class CrossoverOperator:
             problem=problem,
             parents=parents
         )
-        
+
         return self.llm.generate(
             prompt=critic_prompt,
             temperature=temperature
         )
-        
+
     def _synthesize_child_solution(self,
                                  problem: Problem,
-                                 parents: List[Solution],
+                                 parents: list[Solution],
                                  critic_analysis: str,
                                  conversation: ConversationThread,
                                  turn: int,
@@ -129,19 +128,19 @@ class CrossoverOperator:
             parents=parents,
             critic_analysis=critic_analysis
         )
-        
+
         # Generate child solution
         author_response = self.llm.generate(
             prompt=author_prompt,
             temperature=temperature
         )
-        
+
         # Parse solution content
         solution_content = self._parse_solution_content(author_response)
-        
+
         # Evaluate child solution
         evaluation = self.evaluator.evaluate(solution_content, problem)
-        
+
         # Create child solution object
         child_solution = Solution(
             id=str(uuid.uuid4()),
@@ -162,9 +161,9 @@ class CrossoverOperator:
             },
             timestamp=datetime.now()
         )
-        
+
         return child_solution
-        
+
     def _parse_solution_content(self, llm_response: str) -> str:
         """Parse solution content from LLM response.
         
@@ -175,7 +174,7 @@ class CrossoverOperator:
             Cleaned solution content
         """
         content = llm_response.strip()
-        
+
         # Remove common prefixes
         prefixes_to_remove = [
             "Here's my synthesized solution:",
@@ -186,14 +185,14 @@ class CrossoverOperator:
             "New solution:",
             "Solution:",
         ]
-        
+
         for prefix in prefixes_to_remove:
             if content.lower().startswith(prefix.lower()):
                 content = content[len(prefix):].strip()
                 break
-                
+
         return content
-        
+
     def uniform_crossover(self,
                          problem: Problem,
                          parent1: Solution,
@@ -211,15 +210,15 @@ class CrossoverOperator:
             Combined solution content
         """
         import random
-        
+
         # Split solutions into sentences
         sentences1 = self._split_into_sentences(parent1.content)
         sentences2 = self._split_into_sentences(parent2.content)
-        
+
         # Perform uniform crossover
         max_length = max(len(sentences1), len(sentences2))
         combined_sentences = []
-        
+
         for i in range(max_length):
             # Choose which parent to take from
             if random.random() < crossover_rate and i < len(sentences1):
@@ -228,10 +227,10 @@ class CrossoverOperator:
                 combined_sentences.append(sentences2[i])
             elif i < len(sentences1):
                 combined_sentences.append(sentences1[i])
-                
+
         return " ".join(combined_sentences)
-        
-    def _split_into_sentences(self, content: str) -> List[str]:
+
+    def _split_into_sentences(self, content: str) -> list[str]:
         """Split content into sentences.
         
         Args:
@@ -241,14 +240,14 @@ class CrossoverOperator:
             List of sentences
         """
         import re
-        
+
         # Simple sentence splitting
         sentences = re.split(r'[.!?]+', content)
         return [s.strip() for s in sentences if s.strip()]
-        
+
     def multi_point_crossover(self,
                             problem: Problem,
-                            parents: List[Solution],
+                            parents: list[Solution],
                             num_points: int = 2) -> str:
         """Perform multi-point crossover among multiple parents.
         
@@ -261,47 +260,47 @@ class CrossoverOperator:
             Combined solution content
         """
         import random
-        
+
         if not parents:
             return ""
         if len(parents) == 1:
             return parents[0].content
-            
+
         # Get all content as word lists
         parent_words = []
         max_length = 0
-        
+
         for parent in parents:
             words = parent.content.split()
             parent_words.append(words)
             max_length = max(max_length, len(words))
-            
+
         # Generate crossover points
-        crossover_points = sorted(random.sample(range(1, max_length), 
+        crossover_points = sorted(random.sample(range(1, max_length),
                                                min(num_points, max_length - 1)))
         crossover_points = [0] + crossover_points + [max_length]
-        
+
         # Combine segments from different parents
         combined_words = []
         current_parent = 0
-        
+
         for i in range(len(crossover_points) - 1):
             start = crossover_points[i]
             end = crossover_points[i + 1]
-            
+
             # Use words from current parent if available
             if current_parent < len(parent_words) and start < len(parent_words[current_parent]):
                 segment_end = min(end, len(parent_words[current_parent]))
                 combined_words.extend(parent_words[current_parent][start:segment_end])
-                
+
             # Switch to next parent
             current_parent = (current_parent + 1) % len(parent_words)
-            
+
         return " ".join(combined_words)
-        
+
     def semantic_crossover(self,
                           problem: Problem,
-                          parents: List[Solution],
+                          parents: list[Solution],
                           temperature: float = 1.0) -> Solution:
         """Perform semantic crossover using LLM understanding.
         
@@ -322,7 +321,7 @@ class CrossoverOperator:
             children=[],
             turns=[]
         )
-        
+
         return self.crossover(
             problem=problem,
             parents=parents,

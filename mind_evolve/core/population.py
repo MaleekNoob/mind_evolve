@@ -1,17 +1,16 @@
 """Population management for Mind Evolution."""
 
-from typing import Dict, List, Optional
 
 import numpy as np
 from loguru import logger
 
-from .models import Solution, PopulationStats
+from .models import PopulationStats, Solution
 
 
 class Population:
     """Population of solutions on a single island."""
-    
-    def __init__(self, island_id: int, max_size: Optional[int] = None) -> None:
+
+    def __init__(self, island_id: int, max_size: int | None = None) -> None:
         """Initialize population.
         
         Args:
@@ -19,11 +18,11 @@ class Population:
             max_size: Maximum population size (None for unlimited)
         """
         self.island_id = island_id
-        self.solutions: Dict[str, Solution] = {}
+        self.solutions: dict[str, Solution] = {}
         self.max_size = max_size
         self.generation = 0
-        self.best_solution: Optional[Solution] = None
-        
+        self.best_solution: Solution | None = None
+
     def add_solution(self, solution: Solution) -> None:
         """Add solution to population, checking for duplicates.
         
@@ -34,17 +33,17 @@ class Population:
         if self._is_duplicate(solution):
             logger.debug(f"Skipping duplicate solution: {solution.id[:8]}")
             return
-            
+
         # Add to population
         self.solutions[solution.id] = solution
         self._update_best(solution)
-        
+
         # Enforce size limit if specified
         if self.max_size and len(self.solutions) > self.max_size:
             self._remove_worst()
-            
+
         logger.debug(f"Added solution {solution.id[:8]} to island {self.island_id}")
-        
+
     def _is_duplicate(self, solution: Solution) -> bool:
         """Check if solution content already exists in population.
         
@@ -59,7 +58,7 @@ class Population:
             if existing.content.strip().lower() == normalized_content:
                 return True
         return False
-        
+
     def _update_best(self, solution: Solution) -> None:
         """Update best solution if this one is better.
         
@@ -70,27 +69,27 @@ class Population:
             self.best_solution = solution
             logger.debug(f"New best solution on island {self.island_id}: "
                         f"score={solution.score:.3f}")
-            
+
     def _remove_worst(self) -> None:
         """Remove worst solution to maintain size limit."""
         if not self.solutions:
             return
-            
-        worst_id = min(self.solutions.keys(), 
+
+        worst_id = min(self.solutions.keys(),
                       key=lambda k: self.solutions[k].score)
         removed = self.solutions.pop(worst_id)
         logger.debug(f"Removed worst solution {worst_id[:8]} "
                     f"(score={removed.score:.3f}) from island {self.island_id}")
-        
-    def get_selection_pool(self) -> List[Solution]:
+
+    def get_selection_pool(self) -> list[Solution]:
         """Return all solutions available for selection.
         
         Returns:
             List of all solutions in population
         """
         return list(self.solutions.values())
-        
-    def get_top_solutions(self, n: int) -> List[Solution]:
+
+    def get_top_solutions(self, n: int) -> list[Solution]:
         """Get top N solutions by score.
         
         Args:
@@ -105,13 +104,13 @@ class Population:
             reverse=True
         )
         return sorted_solutions[:n]
-        
+
     def clear(self) -> None:
         """Clear all solutions from population."""
         logger.info(f"Clearing population on island {self.island_id}")
         self.solutions.clear()
         self.best_solution = None
-        
+
     def calculate_statistics(self) -> PopulationStats:
         """Calculate population statistics.
         
@@ -130,10 +129,10 @@ class Population:
                 valid_solutions=0,
                 best_solution_id=None
             )
-            
+
         scores = [s.score for s in self.solutions.values()]
         valid_count = sum(1 for s in self.solutions.values() if s.is_valid())
-        
+
         return PopulationStats(
             island_id=self.island_id,
             generation=self.generation,
@@ -145,7 +144,7 @@ class Population:
             valid_solutions=valid_count,
             best_solution_id=self.best_solution.id if self.best_solution else None
         )
-        
+
     def get_diversity_score(self) -> float:
         """Calculate diversity score based on solution content.
         
@@ -154,15 +153,15 @@ class Population:
         """
         if len(self.solutions) < 2:
             return 0.0
-            
+
         # Simple diversity metric based on content length variance
         lengths = [len(s.content) for s in self.solutions.values()]
         return float(np.std(lengths))
-        
+
     def __len__(self) -> int:
         """Return number of solutions in population."""
         return len(self.solutions)
-        
+
     def __repr__(self) -> str:
         """String representation of population."""
         return (f"Population(island_id={self.island_id}, "

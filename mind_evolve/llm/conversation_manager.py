@@ -1,6 +1,5 @@
 """Conversation management for multi-turn dialogs."""
 
-from typing import Dict, List, Optional
 
 from ..core.models import ConversationThread, ConversationTurn, Solution
 from .llm_interface import BaseLLM
@@ -8,7 +7,7 @@ from .llm_interface import BaseLLM
 
 class ConversationManager:
     """Manages multi-turn conversations for solution refinement."""
-    
+
     def __init__(self, llm: BaseLLM):
         """Initialize conversation manager.
         
@@ -16,13 +15,13 @@ class ConversationManager:
             llm: LLM interface for generation
         """
         self.llm = llm
-        self.active_conversations: Dict[str, ConversationThread] = {}
-        
-    def start_conversation(self, 
+        self.active_conversations: dict[str, ConversationThread] = {}
+
+    def start_conversation(self,
                           conversation_id: str,
                           island_id: int,
                           generation: int,
-                          parent_solutions: Optional[List[Solution]] = None) -> ConversationThread:
+                          parent_solutions: list[Solution] | None = None) -> ConversationThread:
         """Start a new conversation thread.
         
         Args:
@@ -42,11 +41,11 @@ class ConversationManager:
             children=[],
             turns=[]
         )
-        
+
         self.active_conversations[conversation_id] = conversation
         return conversation
-        
-    def add_turn(self, 
+
+    def add_turn(self,
                 conversation_id: str,
                 turn: ConversationTurn) -> None:
         """Add a turn to an existing conversation.
@@ -61,8 +60,8 @@ class ConversationManager:
             conversation.children.append(turn.generated_solution)
         else:
             raise ValueError(f"Conversation {conversation_id} not found")
-            
-    def get_conversation(self, conversation_id: str) -> Optional[ConversationThread]:
+
+    def get_conversation(self, conversation_id: str) -> ConversationThread | None:
         """Get conversation by ID.
         
         Args:
@@ -72,8 +71,8 @@ class ConversationManager:
             Conversation thread or None if not found
         """
         return self.active_conversations.get(conversation_id)
-        
-    def end_conversation(self, conversation_id: str) -> Optional[ConversationThread]:
+
+    def end_conversation(self, conversation_id: str) -> ConversationThread | None:
         """End and remove conversation from active list.
         
         Args:
@@ -83,8 +82,8 @@ class ConversationManager:
             Completed conversation thread
         """
         return self.active_conversations.pop(conversation_id, None)
-        
-    def get_conversation_history(self, conversation_id: str) -> List[str]:
+
+    def get_conversation_history(self, conversation_id: str) -> list[str]:
         """Get formatted conversation history.
         
         Args:
@@ -96,28 +95,28 @@ class ConversationManager:
         conversation = self.get_conversation(conversation_id)
         if not conversation:
             return []
-            
+
         history = []
         for turn in conversation.turns:
             if turn.critic_response:
                 history.append(f"CRITIC (Turn {turn.turn_number}):\n{turn.critic_response}")
             history.append(f"AUTHOR (Turn {turn.turn_number}):\n{turn.author_response}")
-            
+
         return history
-        
-    def get_active_conversations(self) -> List[str]:
+
+    def get_active_conversations(self) -> list[str]:
         """Get list of active conversation IDs.
         
         Returns:
             List of conversation IDs
         """
         return list(self.active_conversations.keys())
-        
+
     def clear_all_conversations(self) -> None:
         """Clear all active conversations."""
         self.active_conversations.clear()
-        
-    def get_conversation_stats(self) -> Dict[str, int]:
+
+    def get_conversation_stats(self) -> dict[str, int]:
         """Get statistics about active conversations.
         
         Returns:
@@ -126,7 +125,7 @@ class ConversationManager:
         total_conversations = len(self.active_conversations)
         total_turns = sum(len(conv.turns) for conv in self.active_conversations.values())
         total_solutions = sum(len(conv.children) for conv in self.active_conversations.values())
-        
+
         return {
             "active_conversations": total_conversations,
             "total_turns": total_turns,
