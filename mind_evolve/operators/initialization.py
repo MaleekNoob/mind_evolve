@@ -1,6 +1,5 @@
 """Population initialization operators."""
 
-
 from loguru import logger
 
 from ..core.models import ConversationThread, Problem, Solution
@@ -12,12 +11,11 @@ from ..llm.prompt_manager import PromptManager
 class PopulationInitializer:
     """Handles initialization of populations with solutions."""
 
-    def __init__(self,
-                 llm: BaseLLM,
-                 evaluator: BaseEvaluator,
-                 prompt_manager: PromptManager):
+    def __init__(
+        self, llm: BaseLLM, evaluator: BaseEvaluator, prompt_manager: PromptManager
+    ):
         """Initialize population initializer.
-        
+
         Args:
             llm: LLM interface for generation
             evaluator: Solution evaluator
@@ -27,21 +25,23 @@ class PopulationInitializer:
         self.evaluator = evaluator
         self.prompt_manager = prompt_manager
 
-    def initialize_population(self,
-                            problem: Problem,
-                            island_id: int,
-                            num_conversations: int,
-                            num_refinement_turns: int,
-                            temperature: float = 1.0) -> list[Solution]:
+    def initialize_population(
+        self,
+        problem: Problem,
+        island_id: int,
+        num_conversations: int,
+        num_refinement_turns: int,
+        temperature: float = 1.0,
+    ) -> list[Solution]:
         """Initialize population for an island.
-        
+
         Args:
             problem: Problem to solve
             island_id: Island identifier
             num_conversations: Number of conversations to create
             num_refinement_turns: Number of refinement turns per conversation
             temperature: LLM temperature
-            
+
         Returns:
             List of generated solutions
         """
@@ -59,14 +59,12 @@ class PopulationInitializer:
                 generation=0,
                 parent_solutions=[],  # No parents for initialization
                 children=[],
-                turns=[]
+                turns=[],
             )
 
             # Generate initial solution
             initial_solution = self._generate_initial_solution(
-                problem=problem,
-                conversation=conversation,
-                temperature=temperature
+                problem=problem, conversation=conversation, temperature=temperature
             )
 
             conversation.children.append(initial_solution)
@@ -80,7 +78,7 @@ class PopulationInitializer:
                     previous_solution=current_solution,
                     conversation=conversation,
                     turn=turn,
-                    temperature=temperature
+                    temperature=temperature,
                 )
 
                 conversation.children.append(refined_solution)
@@ -90,17 +88,16 @@ class PopulationInitializer:
         logger.info(f"Generated {len(all_solutions)} solutions for island {island_id}")
         return all_solutions
 
-    def _generate_initial_solution(self,
-                                 problem: Problem,
-                                 conversation: ConversationThread,
-                                 temperature: float) -> Solution:
+    def _generate_initial_solution(
+        self, problem: Problem, conversation: ConversationThread, temperature: float
+    ) -> Solution:
         """Generate initial solution for a conversation.
-        
+
         Args:
             problem: Problem to solve
             conversation: Conversation context
             temperature: LLM temperature
-            
+
         Returns:
             Generated solution
         """
@@ -111,10 +108,7 @@ class PopulationInitializer:
         initial_prompt = self.prompt_manager.create_initial_prompt(problem)
 
         # Generate solution
-        response = self.llm.generate(
-            prompt=initial_prompt,
-            temperature=temperature
-        )
+        response = self.llm.generate(prompt=initial_prompt, temperature=temperature)
 
         # Parse solution content
         solution_content = self._parse_solution_content(response)
@@ -132,34 +126,34 @@ class PopulationInitializer:
             island_id=conversation.island_id,
             conversation_id=conversation.id,
             parent_ids=[],
-            metadata={
-                'turn': 1,
-                'initialization': True,
-                'temperature': temperature
-            },
-            timestamp=datetime.now()
+            metadata={"turn": 1, "initialization": True, "temperature": temperature},
+            timestamp=datetime.now(),
         )
 
-        logger.debug(f"Generated initial solution {solution.id[:8]} "
-                    f"with score {solution.score:.3f}")
+        logger.debug(
+            f"Generated initial solution {solution.id[:8]} "
+            f"with score {solution.score:.3f}"
+        )
 
         return solution
 
-    def _refine_solution(self,
-                        problem: Problem,
-                        previous_solution: Solution,
-                        conversation: ConversationThread,
-                        turn: int,
-                        temperature: float) -> Solution:
+    def _refine_solution(
+        self,
+        problem: Problem,
+        previous_solution: Solution,
+        conversation: ConversationThread,
+        turn: int,
+        temperature: float,
+    ) -> Solution:
         """Refine a solution using critic-author dialog.
-        
+
         Args:
             problem: Problem to solve
             previous_solution: Previous solution to refine
             conversation: Conversation context
             turn: Turn number
             temperature: LLM temperature
-            
+
         Returns:
             Refined solution
         """
@@ -170,12 +164,12 @@ class PopulationInitializer:
         critic_prompt = self.prompt_manager.create_critic_prompt(
             problem=problem,
             solution=previous_solution,
-            feedback=previous_solution.feedback
+            feedback=previous_solution.feedback,
         )
 
         critic_response = self.llm.generate(
             prompt=critic_prompt,
-            temperature=temperature * 0.8  # Slightly lower temperature for analysis
+            temperature=temperature * 0.8,  # Slightly lower temperature for analysis
         )
 
         # Generate refined solution
@@ -183,12 +177,11 @@ class PopulationInitializer:
             problem=problem,
             solution=previous_solution,
             feedback=previous_solution.feedback,
-            critic_analysis=critic_response
+            critic_analysis=critic_response,
         )
 
         author_response = self.llm.generate(
-            prompt=author_prompt,
-            temperature=temperature
+            prompt=author_prompt, temperature=temperature
         )
 
         # Parse solution content
@@ -208,25 +201,29 @@ class PopulationInitializer:
             conversation_id=conversation.id,
             parent_ids=[previous_solution.id],
             metadata={
-                'turn': turn,
-                'refinement': True,
-                'critic_analysis': critic_response[:200] + "..." if len(critic_response) > 200 else critic_response,
-                'temperature': temperature
+                "turn": turn,
+                "refinement": True,
+                "critic_analysis": critic_response[:200] + "..."
+                if len(critic_response) > 200
+                else critic_response,
+                "temperature": temperature,
             },
-            timestamp=datetime.now()
+            timestamp=datetime.now(),
         )
 
-        logger.debug(f"Refined solution {refined_solution.id[:8]} "
-                    f"(turn {turn}) with score {refined_solution.score:.3f}")
+        logger.debug(
+            f"Refined solution {refined_solution.id[:8]} "
+            f"(turn {turn}) with score {refined_solution.score:.3f}"
+        )
 
         return refined_solution
 
     def _parse_solution_content(self, llm_response: str) -> str:
         """Parse solution content from LLM response.
-        
+
         Args:
             llm_response: Raw LLM response
-            
+
         Returns:
             Cleaned solution content
         """
@@ -245,35 +242,39 @@ class PopulationInitializer:
 
         for prefix in prefixes_to_remove:
             if content.lower().startswith(prefix.lower()):
-                content = content[len(prefix):].strip()
+                content = content[len(prefix) :].strip()
                 break
 
         # Remove markdown code blocks if present
         if content.startswith("```") and content.endswith("```"):
-            lines = content.split('\n')
+            lines = content.split("\n")
             if len(lines) > 2:
-                content = '\n'.join(lines[1:-1])
+                content = "\n".join(lines[1:-1])
 
         return content.strip()
 
-    def generate_diverse_initial_solutions(self,
-                                         problem: Problem,
-                                         num_solutions: int,
-                                         temperature_range: tuple = (0.7, 1.3)) -> list[Solution]:
+    def generate_diverse_initial_solutions(
+        self,
+        problem: Problem,
+        num_solutions: int,
+        temperature_range: tuple = (0.7, 1.3),
+    ) -> list[Solution]:
         """Generate diverse initial solutions with varying parameters.
-        
+
         Args:
             problem: Problem to solve
             num_solutions: Number of solutions to generate
             temperature_range: Range of temperatures to use
-            
+
         Returns:
             List of diverse initial solutions
         """
         import numpy as np
 
         solutions = []
-        temperatures = np.linspace(temperature_range[0], temperature_range[1], num_solutions)
+        temperatures = np.linspace(
+            temperature_range[0], temperature_range[1], num_solutions
+        )
 
         for i, temp in enumerate(temperatures):
             # Create dummy conversation for generation
@@ -283,18 +284,16 @@ class PopulationInitializer:
                 generation=0,
                 parent_solutions=[],
                 children=[],
-                turns=[]
+                turns=[],
             )
 
             solution = self._generate_initial_solution(
-                problem=problem,
-                conversation=conversation,
-                temperature=float(temp)
+                problem=problem, conversation=conversation, temperature=float(temp)
             )
 
             # Add diversity metadata
-            solution.metadata['diversity_generation'] = True
-            solution.metadata['temperature_used'] = float(temp)
+            solution.metadata["diversity_generation"] = True
+            solution.metadata["temperature_used"] = float(temp)
 
             solutions.append(solution)
 

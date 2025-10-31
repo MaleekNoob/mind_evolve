@@ -29,6 +29,7 @@ def test_imports():
         traceback.print_exc()
         return False
 
+
 def test_model_creation():
     """Test Pydantic model creation and validation."""
     print("\nTesting model creation...")
@@ -40,24 +41,22 @@ def test_model_creation():
         problem = Problem(
             title="Test Problem",
             description="A simple test problem",
-            constraints=["Keep it short", "Be creative"]
+            constraints=["Keep it short", "Be creative"],
         )
         print(f"✓ Problem created: {problem.title}")
 
         # Test Config creation
-        config = MindEvolutionConfig(
-            N_gens=5,
-            N_island=2,
-            N_convs=3,
-            temperature=0.7
+        config = MindEvolutionConfig(N_gens=5, N_island=2, N_convs=3, temperature=0.7)
+        print(
+            f"✓ Config created: {config.N_gens} generations, {config.N_island} islands"
         )
-        print(f"✓ Config created: {config.N_gens} generations, {config.N_island} islands")
 
         return True
     except Exception as e:
         print(f"✗ Model creation failed: {e}")
         traceback.print_exc()
         return False
+
 
 def test_prompt_manager():
     """Test prompt manager functionality."""
@@ -71,7 +70,7 @@ def test_prompt_manager():
         problem = Problem(
             title="Creative Writing",
             description="Write a short story",
-            constraints=["Under 100 words"]
+            constraints=["Under 100 words"],
         )
 
         # Test prompt generation
@@ -86,6 +85,7 @@ def test_prompt_manager():
         traceback.print_exc()
         return False
 
+
 def test_evaluator():
     """Test evaluator creation and basic functionality."""
     print("\nTesting evaluator...")
@@ -95,9 +95,7 @@ def test_evaluator():
 
         evaluator = create_evaluator("simple")
         problem = Problem(
-            title="Test",
-            description="Simple test",
-            constraints=["Be brief"]
+            title="Test", description="Simple test", constraints=["Be brief"]
         )
 
         # Test evaluation (this should work without LLM)
@@ -108,6 +106,7 @@ def test_evaluator():
         print(f"✗ Evaluator test failed: {e}")
         traceback.print_exc()
         return False
+
 
 def test_island_model():
     """Test island model creation."""
@@ -128,6 +127,7 @@ def test_island_model():
         traceback.print_exc()
         return False
 
+
 def main():
     """Run all tests."""
     print("Mind Evolution Installation Test")
@@ -138,7 +138,7 @@ def main():
         test_model_creation,
         test_prompt_manager,
         test_evaluator,
-        test_island_model
+        test_island_model,
     ]
 
     passed = 0
@@ -163,6 +163,7 @@ def main():
     else:
         print("❌ Some tests failed. Please check the installation.")
         return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -14,7 +14,7 @@ from .utils.config import ConfigManager
 
 app = typer.Typer(
     name="mind-evolve",
-    help="Mind Evolution: Evolutionary Search for LLM-based Problem Solving"
+    help="Mind Evolution: Evolutionary Search for LLM-based Problem Solving",
 )
 console = Console()
 
@@ -22,14 +22,26 @@ console = Console()
 @app.command()
 def run(
     problem_file: Path = typer.Argument(..., help="Path to problem definition file"),
-    config_file: Path | None = typer.Option(None, "--config", "-c", help="Configuration file path"),
-    output_dir: Path = typer.Option(Path("results"), "--output", "-o", help="Output directory"),
-    experiment_name: str | None = typer.Option(None, "--name", "-n", help="Experiment name"),
-    llm_provider: str = typer.Option("openai", "--provider", "-p", help="LLM provider (openai, anthropic, google)"),
+    config_file: Path | None = typer.Option(
+        None, "--config", "-c", help="Configuration file path"
+    ),
+    output_dir: Path = typer.Option(
+        Path("results"), "--output", "-o", help="Output directory"
+    ),
+    experiment_name: str | None = typer.Option(
+        None, "--name", "-n", help="Experiment name"
+    ),
+    llm_provider: str = typer.Option(
+        "openai", "--provider", "-p", help="LLM provider (openai, anthropic, google)"
+    ),
     llm_model: str = typer.Option("gpt-4", "--model", "-m", help="LLM model name"),
-    generations: int = typer.Option(10, "--generations", "-g", help="Number of generations"),
+    generations: int = typer.Option(
+        10, "--generations", "-g", help="Number of generations"
+    ),
     islands: int = typer.Option(4, "--islands", "-i", help="Number of islands"),
-    temperature: float = typer.Option(1.0, "--temperature", "-t", help="LLM temperature"),
+    temperature: float = typer.Option(
+        1.0, "--temperature", "-t", help="LLM temperature"
+    ),
     debug: bool = typer.Option(False, "--debug", "-d", help="Enable debug logging"),
 ) -> None:
     """Run Mind Evolution on a problem."""
@@ -70,7 +82,6 @@ def run(
             TextColumn("[progress.description]{task.description}"),
             console=console,
         ) as progress:
-
             task = progress.add_task("Initializing components...", total=None)
 
             # Create LLM interface
@@ -90,7 +101,7 @@ def run(
                 config=evolution_config,
                 llm=llm,
                 evaluator=evaluator,
-                prompt_manager=prompt_manager
+                prompt_manager=prompt_manager,
             )
 
             progress.update(task, description="Running evolution...")
@@ -99,6 +110,7 @@ def run(
         console.print("\n[yellow]Running Mind Evolution...[/yellow]")
 
         import time
+
         start_time = time.time()
 
         best_solution = mind_evolution.solve(problem, exp_name)
@@ -118,7 +130,7 @@ def run(
 
         # Save best solution
         solution_file = output_dir / f"{exp_name}_best_solution.txt"
-        with open(solution_file, 'w') as f:
+        with open(solution_file, "w") as f:
             f.write(f"Score: {best_solution.score}\n")
             f.write(f"Valid: {best_solution.is_valid()}\n")
             f.write(f"Feedback: {'; '.join(best_solution.feedback)}\n\n")
@@ -134,15 +146,21 @@ def run(
 
 @app.command()
 def create_config(
-    output_path: Path = typer.Argument(..., help="Output path for configuration template"),
-    format: str = typer.Option("yaml", "--format", "-f", help="Config format (yaml, json)"),
+    output_path: Path = typer.Argument(
+        ..., help="Output path for configuration template"
+    ),
+    format: str = typer.Option(
+        "yaml", "--format", "-f", help="Config format (yaml, json)"
+    ),
 ) -> None:
     """Create a configuration template."""
 
     config_manager = ConfigManager()
 
     if format.lower() not in ["yaml", "yml", "json"]:
-        console.print(f"[red]Error: Unsupported format '{format}'. Use 'yaml' or 'json'.[/red]")
+        console.print(
+            f"[red]Error: Unsupported format '{format}'. Use 'yaml' or 'json'.[/red]"
+        )
         raise typer.Exit(1)
 
     # Ensure correct file extension
@@ -163,7 +181,9 @@ def create_config(
 @app.command()
 def analyze(
     results_file: Path = typer.Argument(..., help="Path to results JSON file"),
-    output_dir: Path | None = typer.Option(None, "--output", "-o", help="Output directory for analysis"),
+    output_dir: Path | None = typer.Option(
+        None, "--output", "-o", help="Output directory for analysis"
+    ),
 ) -> None:
     """Analyze results from a completed experiment."""
 
@@ -185,20 +205,20 @@ def analyze(
             output_dir.mkdir(parents=True, exist_ok=True)
 
             analysis_file = output_dir / "analysis_report.txt"
-            with open(analysis_file, 'w') as f:
+            with open(analysis_file, "w") as f:
                 f.write("Mind Evolution Analysis Report\n")
                 f.write("=" * 40 + "\n\n")
 
                 # Write key metrics
-                if 'performance_metrics' in results:
+                if "performance_metrics" in results:
                     f.write("Performance Metrics:\n")
-                    for key, value in results['performance_metrics'].items():
+                    for key, value in results["performance_metrics"].items():
                         f.write(f"  {key}: {value}\n")
                     f.write("\n")
 
-                if 'convergence_analysis' in results:
+                if "convergence_analysis" in results:
                     f.write("Convergence Analysis:\n")
-                    for key, value in results['convergence_analysis'].items():
+                    for key, value in results["convergence_analysis"].items():
                         f.write(f"  {key}: {value}\n")
 
             console.print(f"[green]Analysis saved to {analysis_file}[/green]")
@@ -210,10 +230,10 @@ def analyze(
 
 def load_problem_from_file(problem_file: Path) -> Problem:
     """Load problem definition from file.
-    
+
     Args:
         problem_file: Path to problem file
-        
+
     Returns:
         Problem instance
     """
@@ -241,7 +261,7 @@ def load_problem_from_file(problem_file: Path) -> Problem:
 
 def display_results(best_solution, mind_evolution, runtime: float) -> None:
     """Display evolution results.
-    
+
     Args:
         best_solution: Best solution found
         mind_evolution: MindEvolution instance
@@ -262,10 +282,10 @@ def display_results(best_solution, mind_evolution, runtime: float) -> None:
 
     # Get evolution statistics
     stats = mind_evolution.get_evolution_statistics()
-    table.add_row("Generations", str(stats['generations_completed']))
+    table.add_row("Generations", str(stats["generations_completed"]))
 
-    if 'performance_metrics' in stats:
-        perf = stats['performance_metrics']
+    if "performance_metrics" in stats:
+        perf = stats["performance_metrics"]
         table.add_row("Solutions/min", f"{perf.get('solutions_per_minute', 0):.1f}")
         table.add_row("Success Rate", f"{perf.get('success_rate', 0):.1f}%")
 
@@ -283,15 +303,15 @@ def display_results(best_solution, mind_evolution, runtime: float) -> None:
 
 def display_analysis(results: dict) -> None:
     """Display analysis of results.
-    
+
     Args:
         results: Results dictionary
     """
     console.print("\n[bold blue]Results Analysis[/bold blue]")
 
-    if 'performance_metrics' in results:
+    if "performance_metrics" in results:
         console.print("\n[cyan]Performance Metrics:[/cyan]")
-        perf = results['performance_metrics']
+        perf = results["performance_metrics"]
 
         for key, value in perf.items():
             if isinstance(value, float):
@@ -299,9 +319,9 @@ def display_analysis(results: dict) -> None:
             else:
                 console.print(f"  {key}: {value}")
 
-    if 'convergence_analysis' in results:
+    if "convergence_analysis" in results:
         console.print("\n[cyan]Convergence Analysis:[/cyan]")
-        conv = results['convergence_analysis']
+        conv = results["convergence_analysis"]
 
         for key, value in conv.items():
             if isinstance(value, float):

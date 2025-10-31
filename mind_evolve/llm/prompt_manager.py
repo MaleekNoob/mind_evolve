@@ -22,7 +22,7 @@ class PromptManager:
 
     def __init__(self, task_type: str = "general"):
         """Initialize prompt manager.
-        
+
         Args:
             task_type: Type of task (travel_planning, coding, etc.)
         """
@@ -37,46 +37,51 @@ class PromptManager:
                 name="initial",
                 template=self._get_initial_template(),
                 description="Generate initial solution",
-                required_variables=["problem"]
+                required_variables=["problem"],
             ),
             "critic": PromptTemplate(
                 name="critic",
                 template=self._get_critic_template(),
                 description="Analyze solution critically",
-                required_variables=["problem", "solution", "feedback"]
+                required_variables=["problem", "solution", "feedback"],
             ),
             "author": PromptTemplate(
                 name="author",
                 template=self._get_author_template(),
                 description="Generate improved solution",
-                required_variables=["problem", "solution", "feedback", "critic_analysis"]
+                required_variables=[
+                    "problem",
+                    "solution",
+                    "feedback",
+                    "critic_analysis",
+                ],
             ),
             "multi_parent_critic": PromptTemplate(
                 name="multi_parent_critic",
                 template=self._get_multi_parent_critic_template(),
                 description="Analyze multiple parent solutions",
-                required_variables=["problem", "parents"]
+                required_variables=["problem", "parents"],
             ),
             "multi_parent_author": PromptTemplate(
                 name="multi_parent_author",
                 template=self._get_multi_parent_author_template(),
                 description="Synthesize from multiple parents",
-                required_variables=["problem", "parents", "critic_analysis"]
+                required_variables=["problem", "parents", "critic_analysis"],
             ),
             "elite_selection": PromptTemplate(
                 name="elite_selection",
                 template=self._get_elite_selection_template(),
                 description="Select diverse elite solutions",
-                required_variables=["candidates", "num_to_select"]
-            )
+                required_variables=["candidates", "num_to_select"],
+            ),
         }
 
     def create_initial_prompt(self, problem: Problem) -> str:
         """Generate prompt for initial solution generation.
-        
+
         Args:
             problem: Problem to solve
-            
+
         Returns:
             Formatted prompt string
         """
@@ -85,20 +90,19 @@ class PromptManager:
             problem=problem,
             problem_description=problem.description,
             constraints=self._format_constraints(problem.constraints),
-            examples=self._format_examples(problem.examples)
+            examples=self._format_examples(problem.examples),
         )
 
-    def create_critic_prompt(self,
-                           problem: Problem,
-                           solution: Solution,
-                           feedback: list[str]) -> str:
+    def create_critic_prompt(
+        self, problem: Problem, solution: Solution, feedback: list[str]
+    ) -> str:
         """Generate critic analysis prompt.
-        
+
         Args:
             problem: Original problem
             solution: Solution to analyze
             feedback: Evaluation feedback
-            
+
         Returns:
             Formatted prompt string
         """
@@ -109,22 +113,24 @@ class PromptManager:
             constraints=self._format_constraints(problem.constraints),
             solution_content=solution.content,
             feedback_list=self._format_feedback(feedback),
-            score=solution.score
+            score=solution.score,
         )
 
-    def create_author_prompt(self,
-                           problem: Problem,
-                           solution: Solution,
-                           feedback: list[str],
-                           critic_analysis: str) -> str:
+    def create_author_prompt(
+        self,
+        problem: Problem,
+        solution: Solution,
+        feedback: list[str],
+        critic_analysis: str,
+    ) -> str:
         """Generate author refinement prompt.
-        
+
         Args:
             problem: Original problem
             solution: Previous solution
             feedback: Evaluation feedback
             critic_analysis: Critic's analysis
-            
+
         Returns:
             Formatted prompt string
         """
@@ -136,18 +142,18 @@ class PromptManager:
             solution_content=solution.content,
             feedback_list=self._format_feedback(feedback),
             critic_analysis=critic_analysis,
-            score=solution.score
+            score=solution.score,
         )
 
-    def create_multi_parent_critic_prompt(self,
-                                        problem: Problem,
-                                        parents: list[Solution]) -> str:
+    def create_multi_parent_critic_prompt(
+        self, problem: Problem, parents: list[Solution]
+    ) -> str:
         """Generate critic prompt for multiple parents.
-        
+
         Args:
             problem: Original problem
             parents: Parent solutions to analyze
-            
+
         Returns:
             Formatted prompt string
         """
@@ -157,20 +163,19 @@ class PromptManager:
             problem_description=problem.description,
             constraints=self._format_constraints(problem.constraints),
             parents=parents,
-            parent_summaries=self._format_parent_summaries(parents)
+            parent_summaries=self._format_parent_summaries(parents),
         )
 
-    def create_multi_parent_author_prompt(self,
-                                        problem: Problem,
-                                        parents: list[Solution],
-                                        critic_analysis: str) -> str:
+    def create_multi_parent_author_prompt(
+        self, problem: Problem, parents: list[Solution], critic_analysis: str
+    ) -> str:
         """Generate author prompt for crossover.
-        
+
         Args:
             problem: Original problem
             parents: Parent solutions
             critic_analysis: Critic's analysis
-            
+
         Returns:
             Formatted prompt string
         """
@@ -181,18 +186,18 @@ class PromptManager:
             constraints=self._format_constraints(problem.constraints),
             parents=parents,
             parent_summaries=self._format_parent_summaries(parents),
-            critic_analysis=critic_analysis
+            critic_analysis=critic_analysis,
         )
 
-    def create_elite_selection_prompt(self,
-                                    candidates: list[Solution],
-                                    num_to_select: int) -> str:
+    def create_elite_selection_prompt(
+        self, candidates: list[Solution], num_to_select: int
+    ) -> str:
         """Generate prompt for diverse elite selection.
-        
+
         Args:
             candidates: Candidate solutions
             num_to_select: Number to select
-            
+
         Returns:
             Formatted prompt string
         """
@@ -200,7 +205,7 @@ class PromptManager:
         return template.render(
             candidates=candidates,
             num_to_select=num_to_select,
-            candidate_summaries=self._format_candidate_summaries(candidates)
+            candidate_summaries=self._format_candidate_summaries(candidates),
         )
 
     def _format_constraints(self, constraints: list[str]) -> str:
@@ -241,7 +246,9 @@ class PromptManager:
         """Format candidate solution summaries."""
         summaries = []
         for i, candidate in enumerate(candidates):
-            summaries.append(f"Candidate {i} (ID: {candidate.id[:8]}, Score: {candidate.score:.2f}):")
+            summaries.append(
+                f"Candidate {i} (ID: {candidate.id[:8]}, Score: {candidate.score:.2f}):"
+            )
             summaries.append(f"  Content: {candidate.content[:150]}...")
         return "\n".join(summaries)
 

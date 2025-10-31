@@ -19,8 +19,12 @@ class Solution(BaseModel):
     generation: int = Field(..., description="Generation number created")
     island_id: int = Field(..., description="Origin island ID")
     conversation_id: str = Field(..., description="Parent conversation thread ID")
-    parent_ids: list[str] = Field(default_factory=list, description="Parent solution IDs")
-    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional info")
+    parent_ids: list[str] = Field(
+        default_factory=list, description="Parent solution IDs"
+    )
+    metadata: dict[str, Any] = Field(
+        default_factory=dict, description="Additional info"
+    )
     timestamp: datetime = Field(default_factory=datetime.now)
 
     def is_valid(self) -> bool:
@@ -29,9 +33,8 @@ class Solution(BaseModel):
 
     class Config:
         """Pydantic configuration."""
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
+
+        json_encoders = {datetime: lambda v: v.isoformat()}
 
 
 class ConversationTurn(BaseModel):
@@ -42,7 +45,9 @@ class ConversationTurn(BaseModel):
     critic_response: str = Field(default="", description="Critic's response")
     author_prompt: str = Field(..., description="Author's generation prompt")
     author_response: str = Field(..., description="Author's response")
-    generated_solution: Solution = Field(..., description="Solution generated this turn")
+    generated_solution: Solution = Field(
+        ..., description="Solution generated this turn"
+    )
     evaluation_result: EvaluationResult = Field(..., description="Evaluation outcome")
 
 
@@ -76,13 +81,15 @@ class EvaluationResult(BaseModel):
     feedback: list[str] = Field(default_factory=list, description="Textual feedback")
     is_valid: bool = Field(..., description="Whether solution satisfies constraints")
     constraint_violations: int = Field(default=0, description="Number of violations")
-    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metrics")
+    metadata: dict[str, Any] = Field(
+        default_factory=dict, description="Additional metrics"
+    )
 
-    @validator('score')
+    @validator("score")
     def score_must_be_numeric(cls, v):
         """Ensure score is a valid number."""
         if not isinstance(v, (int, float)):
-            raise ValueError('Score must be numeric')
+            raise ValueError("Score must be numeric")
         return float(v)
 
 
@@ -92,15 +99,21 @@ class Problem(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     title: str = Field(..., description="Problem title")
     description: str = Field(..., description="Detailed problem description")
-    constraints: list[str] = Field(default_factory=list, description="Problem constraints")
-    examples: list[dict[str, Any]] = Field(default_factory=list, description="Example inputs/outputs")
-    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional problem info")
+    constraints: list[str] = Field(
+        default_factory=list, description="Problem constraints"
+    )
+    examples: list[dict[str, Any]] = Field(
+        default_factory=list, description="Example inputs/outputs"
+    )
+    metadata: dict[str, Any] = Field(
+        default_factory=dict, description="Additional problem info"
+    )
 
-    @validator('description')
+    @validator("description")
     def description_not_empty(cls, v):
         """Ensure description is not empty."""
         if not v.strip():
-            raise ValueError('Problem description cannot be empty')
+            raise ValueError("Problem description cannot be empty")
         return v
 
 
@@ -121,7 +134,9 @@ class MindEvolutionConfig(BaseModel):
 
     # Genetic operators
     N_parent: int = Field(5, description="Max parents for crossover", ge=0)
-    Pr_no_parents: float = Field(1/6, description="Probability of zero parents", ge=0.0, le=1.0)
+    Pr_no_parents: float = Field(
+        1 / 6, description="Probability of zero parents", ge=0.0, le=1.0
+    )
 
     # Migration
     N_emigrate: int = Field(5, description="Solutions to migrate per island", ge=0)
@@ -129,7 +144,9 @@ class MindEvolutionConfig(BaseModel):
     # Island reset
     N_top: int = Field(5, description="Elite solutions for reset", ge=1)
     N_candidate: int = Field(15, description="Candidates to consider for reset", ge=1)
-    use_llm_for_reset: bool = Field(True, description="Use LLM to select diverse elites")
+    use_llm_for_reset: bool = Field(
+        True, description="Use LLM to select diverse elites"
+    )
 
     # LLM settings
     model_name: str = Field("gemini-1.5-flash-001", description="LLM model name")
@@ -146,18 +163,18 @@ class MindEvolutionConfig(BaseModel):
     save_all_solutions: bool = Field(True, description="Save all generated solutions")
     checkpoint_frequency: int = Field(1, description="Save every N generations", ge=1)
 
-    @validator('N_reset')
+    @validator("N_reset")
     def reset_not_exceed_islands(cls, v, values):
         """Ensure N_reset doesn't exceed N_island."""
-        if 'N_island' in values and v > values['N_island']:
-            raise ValueError('N_reset cannot exceed N_island')
+        if "N_island" in values and v > values["N_island"]:
+            raise ValueError("N_reset cannot exceed N_island")
         return v
 
-    @validator('N_top')
+    @validator("N_top")
     def top_not_exceed_candidates(cls, v, values):
         """Ensure N_top doesn't exceed N_candidate."""
-        if 'N_candidate' in values and v > values['N_candidate']:
-            raise ValueError('N_top cannot exceed N_candidate')
+        if "N_candidate" in values and v > values["N_candidate"]:
+            raise ValueError("N_top cannot exceed N_candidate")
         return v
 
 

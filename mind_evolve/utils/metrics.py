@@ -31,7 +31,9 @@ class ExperimentMetrics:
     avg_llm_response_time: float = 0.0
 
     # Population metrics
-    population_stats_history: list[dict[str, PopulationStats]] = field(default_factory=list)
+    population_stats_history: list[dict[str, PopulationStats]] = field(
+        default_factory=list
+    )
     diversity_history: list[float] = field(default_factory=list)
 
     # Island metrics
@@ -68,7 +70,7 @@ class MetricsCollector:
 
     def __init__(self, experiment_name: str):
         """Initialize metrics collector.
-        
+
         Args:
             experiment_name: Name of the experiment
         """
@@ -79,17 +81,20 @@ class MetricsCollector:
 
     def start_generation(self, generation: int) -> None:
         """Mark start of a generation.
-        
+
         Args:
             generation: Generation number
         """
         self.generation_start_times[generation] = time.time()
 
-    def end_generation(self, generation: int,
-                      population_stats: dict[int, PopulationStats],
-                      best_solution: Solution | None = None) -> None:
+    def end_generation(
+        self,
+        generation: int,
+        population_stats: dict[int, PopulationStats],
+        best_solution: Solution | None = None,
+    ) -> None:
         """Mark end of a generation and collect metrics.
-        
+
         Args:
             generation: Generation number
             population_stats: Statistics for each island
@@ -109,8 +114,7 @@ class MetricsCollector:
         # Update best score
         if best_solution:
             self.metrics.best_score_achieved = max(
-                self.metrics.best_score_achieved,
-                best_solution.score
+                self.metrics.best_score_achieved, best_solution.score
             )
 
         # Calculate population diversity
@@ -122,7 +126,7 @@ class MetricsCollector:
 
     def record_solution_generated(self, solution: Solution) -> None:
         """Record generation of a new solution.
-        
+
         Args:
             solution: Generated solution
         """
@@ -142,7 +146,7 @@ class MetricsCollector:
 
     def record_llm_call(self, response_time: float) -> None:
         """Record an LLM API call.
-        
+
         Args:
             response_time: Time taken for the call in seconds
         """
@@ -154,7 +158,7 @@ class MetricsCollector:
 
     def record_evaluation_call(self, evaluation_time: float) -> None:
         """Record a solution evaluation call.
-        
+
         Args:
             evaluation_time: Time taken for evaluation in seconds
         """
@@ -163,35 +167,32 @@ class MetricsCollector:
 
     def record_migration(self, migration_stats: dict[str, Any]) -> None:
         """Record migration statistics.
-        
+
         Args:
             migration_stats: Migration statistics
         """
-        migration_record = {
-            'timestamp': time.time(),
-            **migration_stats
-        }
+        migration_record = {"timestamp": time.time(), **migration_stats}
         self.metrics.migration_statistics.append(migration_record)
 
-    def record_island_reset(self, reset_islands: list[int],
-                          elite_count: int) -> None:
+    def record_island_reset(self, reset_islands: list[int], elite_count: int) -> None:
         """Record island reset operation.
-        
+
         Args:
             reset_islands: Islands that were reset
             elite_count: Number of elite solutions used
         """
         reset_record = {
-            'timestamp': time.time(),
-            'reset_islands': reset_islands,
-            'elite_count': elite_count
+            "timestamp": time.time(),
+            "reset_islands": reset_islands,
+            "elite_count": elite_count,
         }
         self.metrics.reset_statistics.append(reset_record)
 
-    def update_island_performance(self, island_id: int,
-                                performance_metrics: dict[str, float]) -> None:
+    def update_island_performance(
+        self, island_id: int, performance_metrics: dict[str, float]
+    ) -> None:
         """Update performance metrics for an island.
-        
+
         Args:
             island_id: Island identifier
             performance_metrics: Performance metrics dictionary
@@ -203,7 +204,7 @@ class MetricsCollector:
 
     def finalize_experiment(self) -> ExperimentMetrics:
         """Finalize experiment and return complete metrics.
-        
+
         Returns:
             Complete experiment metrics
         """
@@ -212,7 +213,7 @@ class MetricsCollector:
 
     def _update_avg_generation_time(self, generation_time: float) -> None:
         """Update average generation time.
-        
+
         Args:
             generation_time: Time for this generation
         """
@@ -221,29 +222,29 @@ class MetricsCollector:
 
         # Running average calculation
         self.metrics.avg_generation_time = (
-            (current_avg * completed + generation_time) / (completed + 1)
-        )
+            current_avg * completed + generation_time
+        ) / (completed + 1)
 
     def get_performance_summary(self) -> dict[str, Any]:
         """Get performance summary.
-        
+
         Returns:
             Dictionary with key performance metrics
         """
         return {
-            'runtime_minutes': self.metrics.runtime_minutes,
-            'generations_completed': self.metrics.generations_completed,
-            'solutions_per_minute': self.metrics.solutions_per_minute,
-            'success_rate': self.metrics.success_rate,
-            'best_score': self.metrics.best_score_achieved,
-            'avg_generation_time': self.metrics.avg_generation_time,
-            'total_llm_calls': self.metrics.total_llm_calls,
-            'avg_llm_response_time': self.metrics.avg_llm_response_time,
+            "runtime_minutes": self.metrics.runtime_minutes,
+            "generations_completed": self.metrics.generations_completed,
+            "solutions_per_minute": self.metrics.solutions_per_minute,
+            "success_rate": self.metrics.success_rate,
+            "best_score": self.metrics.best_score_achieved,
+            "avg_generation_time": self.metrics.avg_generation_time,
+            "total_llm_calls": self.metrics.total_llm_calls,
+            "avg_llm_response_time": self.metrics.avg_llm_response_time,
         }
 
     def get_convergence_analysis(self) -> dict[str, Any]:
         """Analyze convergence patterns.
-        
+
         Returns:
             Convergence analysis results
         """
@@ -257,7 +258,9 @@ class MetricsCollector:
         if window_size < 2:
             moving_avg = scores
         else:
-            moving_avg = np.convolve(scores, np.ones(window_size)/window_size, mode='valid')
+            moving_avg = np.convolve(
+                scores, np.ones(window_size) / window_size, mode="valid"
+            )
 
         # Find best improvement periods
         if len(moving_avg) > 1:
@@ -269,21 +272,21 @@ class MetricsCollector:
             best_improvement = 0.0
 
         return {
-            'initial_score': float(scores[0]) if len(scores) > 0 else 0.0,
-            'final_score': float(scores[-1]) if len(scores) > 0 else 0.0,
-            'max_score': float(np.max(scores)),
-            'score_variance': float(np.var(scores)),
-            'best_improvement': float(best_improvement),
-            'best_improvement_at': int(best_improvement_idx),
-            'convergence_trend': self._calculate_convergence_trend(moving_avg),
+            "initial_score": float(scores[0]) if len(scores) > 0 else 0.0,
+            "final_score": float(scores[-1]) if len(scores) > 0 else 0.0,
+            "max_score": float(np.max(scores)),
+            "score_variance": float(np.var(scores)),
+            "best_improvement": float(best_improvement),
+            "best_improvement_at": int(best_improvement_idx),
+            "convergence_trend": self._calculate_convergence_trend(moving_avg),
         }
 
     def _calculate_convergence_trend(self, moving_avg: np.ndarray) -> str:
         """Calculate overall convergence trend.
-        
+
         Args:
             moving_avg: Moving average of scores
-            
+
         Returns:
             Trend description
         """
@@ -303,7 +306,7 @@ class MetricsCollector:
 
     def export_metrics(self, output_path: str, format: str = "json") -> None:
         """Export metrics to file.
-        
+
         Args:
             output_path: Output file path
             format: Export format (json, csv)
@@ -317,20 +320,20 @@ class MetricsCollector:
         if format.lower() == "json":
             # Convert metrics to JSON-serializable format
             metrics_dict = {
-                'experiment_name': self.metrics.experiment_name,
-                'runtime_minutes': self.metrics.runtime_minutes,
-                'generations_completed': self.metrics.generations_completed,
-                'total_solutions_generated': self.metrics.total_solutions_generated,
-                'valid_solutions_found': self.metrics.valid_solutions_found,
-                'best_score_achieved': self.metrics.best_score_achieved,
-                'success_rate': self.metrics.success_rate,
-                'performance_summary': self.get_performance_summary(),
-                'convergence_analysis': self.get_convergence_analysis(),
-                'score_history': self.metrics.score_history,
-                'constraint_violation_history': self.metrics.constraint_violation_history,
+                "experiment_name": self.metrics.experiment_name,
+                "runtime_minutes": self.metrics.runtime_minutes,
+                "generations_completed": self.metrics.generations_completed,
+                "total_solutions_generated": self.metrics.total_solutions_generated,
+                "valid_solutions_found": self.metrics.valid_solutions_found,
+                "best_score_achieved": self.metrics.best_score_achieved,
+                "success_rate": self.metrics.success_rate,
+                "performance_summary": self.get_performance_summary(),
+                "convergence_analysis": self.get_convergence_analysis(),
+                "score_history": self.metrics.score_history,
+                "constraint_violation_history": self.metrics.constraint_violation_history,
             }
 
-            with open(output_path, 'w') as f:
+            with open(output_path, "w") as f:
                 json.dump(metrics_dict, f, indent=2)
 
         elif format.lower() == "csv":
@@ -338,9 +341,9 @@ class MetricsCollector:
 
             # Create DataFrame with key metrics over time
             df_data = {
-                'generation': list(range(len(self.metrics.score_history))),
-                'score': self.metrics.score_history,
-                'constraint_violations': self.metrics.constraint_violation_history,
+                "generation": list(range(len(self.metrics.score_history))),
+                "score": self.metrics.score_history,
+                "constraint_violations": self.metrics.constraint_violation_history,
             }
 
             df = pd.DataFrame(df_data)

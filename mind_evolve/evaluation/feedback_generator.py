@@ -10,23 +10,22 @@ class FeedbackGenerator:
 
     def __init__(self, feedback_style: str = "constructive"):
         """Initialize feedback generator.
-        
+
         Args:
             feedback_style: Style of feedback (constructive, detailed, concise)
         """
         self.feedback_style = feedback_style
 
-    def generate_feedback(self,
-                         solution: Solution,
-                         problem: Problem,
-                         evaluation: EvaluationResult) -> list[str]:
+    def generate_feedback(
+        self, solution: Solution, problem: Problem, evaluation: EvaluationResult
+    ) -> list[str]:
         """Generate comprehensive feedback for a solution.
-        
+
         Args:
             solution: Solution that was evaluated
             problem: Original problem
             evaluation: Evaluation results
-            
+
         Returns:
             List of feedback messages
         """
@@ -42,7 +41,9 @@ class FeedbackGenerator:
 
         # Constraint violation feedback
         if evaluation.constraint_violations > 0:
-            feedback.append(f"Solution violates {evaluation.constraint_violations} constraint(s)")
+            feedback.append(
+                f"Solution violates {evaluation.constraint_violations} constraint(s)"
+            )
             feedback.extend(self._generate_constraint_feedback(problem, evaluation))
         else:
             feedback.append("All constraints appear to be satisfied")
@@ -53,26 +54,29 @@ class FeedbackGenerator:
 
         # Improvement suggestions
         if evaluation.score < 8.0:
-            suggestions = self._generate_improvement_suggestions(solution, problem, evaluation)
+            suggestions = self._generate_improvement_suggestions(
+                solution, problem, evaluation
+            )
             feedback.extend(suggestions)
 
         return feedback
 
-    def _generate_constraint_feedback(self,
-                                    problem: Problem,
-                                    evaluation: EvaluationResult) -> list[str]:
+    def _generate_constraint_feedback(
+        self, problem: Problem, evaluation: EvaluationResult
+    ) -> list[str]:
         """Generate specific feedback about constraint violations.
-        
+
         Args:
             problem: Problem definition
             evaluation: Evaluation results
-            
+
         Returns:
             List of constraint-specific feedback
         """
         # Extract constraint violations from evaluation feedback
         constraint_feedback = [
-            msg for msg in evaluation.feedback
+            msg
+            for msg in evaluation.feedback
             if "constraint" in msg.lower() and "violated" in msg.lower()
         ]
 
@@ -83,17 +87,17 @@ class FeedbackGenerator:
 
     def _generate_content_feedback(self, content: str) -> list[str]:
         """Generate feedback about solution content quality.
-        
+
         Args:
             content: Solution content
-            
+
         Returns:
             List of content-specific feedback
         """
         feedback = []
 
         word_count = len(content.split())
-        line_count = len(content.strip().split('\n'))
+        line_count = len(content.strip().split("\n"))
 
         # Length feedback
         if word_count < 20:
@@ -103,27 +107,31 @@ class FeedbackGenerator:
 
         # Structure feedback
         if line_count == 1:
-            feedback.append("Consider organizing solution with better structure (paragraphs, lists)")
-        elif any(line.strip().startswith(('-', '*', '1.', '2.')) for line in content.split('\n')):
+            feedback.append(
+                "Consider organizing solution with better structure (paragraphs, lists)"
+            )
+        elif any(
+            line.strip().startswith(("-", "*", "1.", "2."))
+            for line in content.split("\n")
+        ):
             feedback.append("Good use of structured formatting")
 
         # Specificity feedback
-        if content.count(',') < 2 and word_count > 30:
+        if content.count(",") < 2 and word_count > 30:
             feedback.append("Solution could benefit from more specific details")
 
         return feedback
 
-    def _generate_improvement_suggestions(self,
-                                        solution: Solution,
-                                        problem: Problem,
-                                        evaluation: EvaluationResult) -> list[str]:
+    def _generate_improvement_suggestions(
+        self, solution: Solution, problem: Problem, evaluation: EvaluationResult
+    ) -> list[str]:
         """Generate specific improvement suggestions.
-        
+
         Args:
             solution: Current solution
             problem: Problem definition
             evaluation: Evaluation results
-            
+
         Returns:
             List of improvement suggestions
         """
@@ -135,12 +143,18 @@ class FeedbackGenerator:
             suggestions.append("Review the problem requirements more carefully")
         else:
             suggestions.append("Focus on addressing specific constraint violations")
-            suggestions.append("Consider adding more detail to strengthen your solution")
+            suggestions.append(
+                "Consider adding more detail to strengthen your solution"
+            )
 
         # Constraint-based suggestions
         if evaluation.constraint_violations > 0:
-            suggestions.append("Review each constraint and ensure your solution explicitly addresses them")
-            suggestions.append("Consider adding explanations for how you satisfy each requirement")
+            suggestions.append(
+                "Review each constraint and ensure your solution explicitly addresses them"
+            )
+            suggestions.append(
+                "Consider adding explanations for how you satisfy each requirement"
+            )
 
         # Content-based suggestions
         if len(solution.content.split()) < 50:
@@ -148,16 +162,18 @@ class FeedbackGenerator:
 
         # Problem-specific suggestions
         if problem.examples and "example" not in solution.content.lower():
-            suggestions.append("Consider referencing or building upon the provided examples")
+            suggestions.append(
+                "Consider referencing or building upon the provided examples"
+            )
 
         return suggestions[:3]  # Limit to top 3 suggestions
 
     def format_feedback_for_display(self, feedback: list[str]) -> str:
         """Format feedback list for display.
-        
+
         Args:
             feedback: List of feedback messages
-            
+
         Returns:
             Formatted feedback string
         """
@@ -174,15 +190,15 @@ class FeedbackGenerator:
         else:  # constructive
             return "\n".join(f"• {msg}" for msg in feedback)
 
-    def get_feedback_summary(self,
-                           solutions: list[Solution],
-                           evaluations: list[EvaluationResult]) -> dict[str, Any]:
+    def get_feedback_summary(
+        self, solutions: list[Solution], evaluations: list[EvaluationResult]
+    ) -> dict[str, Any]:
         """Generate summary of feedback across multiple solutions.
-        
+
         Args:
             solutions: List of solutions
             evaluations: List of evaluation results
-            
+
         Returns:
             Dictionary with feedback summary statistics
         """
@@ -190,9 +206,15 @@ class FeedbackGenerator:
             return {}
 
         # Aggregate statistics
-        total_feedback_items = sum(len(eval_result.feedback) for eval_result in evaluations)
-        avg_score = sum(eval_result.score for eval_result in evaluations) / len(evaluations)
-        total_violations = sum(eval_result.constraint_violations for eval_result in evaluations)
+        total_feedback_items = sum(
+            len(eval_result.feedback) for eval_result in evaluations
+        )
+        avg_score = sum(eval_result.score for eval_result in evaluations) / len(
+            evaluations
+        )
+        total_violations = sum(
+            eval_result.constraint_violations for eval_result in evaluations
+        )
 
         # Common feedback themes
         all_feedback = []
@@ -213,10 +235,10 @@ class FeedbackGenerator:
 
     def _extract_common_keywords(self, feedback_list: list[str]) -> list[str]:
         """Extract common keywords from feedback messages.
-        
+
         Args:
             feedback_list: List of feedback messages
-            
+
         Returns:
             List of common keywords sorted by frequency
         """
@@ -226,15 +248,24 @@ class FeedbackGenerator:
         # Extract meaningful words
         all_words = []
         for feedback in feedback_list:
-            words = re.findall(r'\b\w{4,}\b', feedback.lower())  # Words with 4+ chars
+            words = re.findall(r"\b\w{4,}\b", feedback.lower())  # Words with 4+ chars
             all_words.extend(words)
 
         # Count frequency and return most common
         word_counts = Counter(all_words)
 
         # Filter out common stop words
-        stop_words = {'solution', 'constraint', 'problem', 'should', 'could', 'would', 'consider'}
-        filtered_counts = {word: count for word, count in word_counts.items()
-                          if word not in stop_words}
+        stop_words = {
+            "solution",
+            "constraint",
+            "problem",
+            "should",
+            "could",
+            "would",
+            "consider",
+        }
+        filtered_counts = {
+            word: count for word, count in word_counts.items() if word not in stop_words
+        }
 
         return [word for word, _ in Counter(filtered_counts).most_common()]
