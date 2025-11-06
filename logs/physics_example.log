@@ -1,0 +1,11 @@
+2025-11-04 23:11:49.853 | INFO     | mind_evolve.core.evolutionary_engine:solve:58 | Starting Mind Evolution for problem: Quantum Tunneling and Barrier Penetration Analysis
+2025-11-04 23:11:49.854 | INFO     | mind_evolve.core.evolutionary_engine:solve:59 | Configuration: 10 generations, 4 islands, 3 conversations
+2025-11-04 23:11:49.854 | INFO     | mind_evolve.core.evolutionary_engine:solve:66 | Initializing populations...
+2025-11-04 23:11:49.854 | INFO     | mind_evolve.core.island_model:initialize_populations:64 | Initializing 4 island populations
+2025-11-04 23:11:49.854 | INFO     | mind_evolve.operators.initialization:initialize_population:48 | Initializing population for island 0
+2025-11-04 23:29:11.209 | INFO     | mind_evolve.operators.initialization:initialize_population:88 | Generated 15 solutions for island 0
+2025-11-04 23:29:11.219 | INFO     | mind_evolve.operators.initialization:initialize_population:48 | Initializing population for island 1
+2025-11-04 23:38:06.473 | WARNING  | mind_evolve.core.evolutionary_engine:solve:85 | Evolution interrupted by user
+2025-11-04 23:38:06.474 | INFO     | mind_evolve.core.evolutionary_engine:solve:104 | Evolution completed. Best solution score: 10.000
+2025-11-04 23:38:06.474 | INFO     | mind_evolve.core.evolutionary_engine:solve:111 | Experiment metrics: {'runtime_minutes': 26.277011040846507, 'generations_completed': 0, 'solutions_per_minute': 0.0, 'success_rate': 0.0, 'best_score': 0.0, 'avg_generation_time': 0.0, 'total_llm_calls': 0, 'avg_llm_response_time': 0.0}
+2025-11-04 23:38:06.493 | INFO     | mind_evolve.core.evolutionary_engine:export_results:313 | Results exported to results\physics_example_results.json
